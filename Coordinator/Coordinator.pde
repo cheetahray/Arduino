@@ -21,9 +21,9 @@ void loop()
        }
        else if('B' == D1)  //確認起始字元
         {
-         Serial.write('B');
+         Serial.write('N');
        }
     }    
 
-   delay(1000); 
+   delay(10); 
 }
