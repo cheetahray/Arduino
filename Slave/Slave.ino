@@ -1,7 +1,6 @@
 /*
    EXcode 15-1
 */
-boolean state =0;     //1:HIGH  ;  0:LOW
 int ledPin = 13; 
 int PIRSensor = 2; // PIR 模組訊號
 
@@ -15,8 +14,7 @@ void setup()
 
 void loop() 
 {
-  state = digitalRead(PIRSensor); // 讀取目前狀態
-  digitalWrite(ledPin, state);
+  boolean state = digitalRead(PIRSensor); // 讀取目前狀態
   if (HIGH == state)
   {
     Serial.print("A");
@@ -25,6 +23,6 @@ void loop()
   {
     Serial.print("N");
   }
-  delay(100); 
-  
+  digitalWrite(ledPin, state);
+  delay(150); 
 }
