@@ -15,15 +15,15 @@ void loop()
   if(Serial.available() > 0)  
     {
       char D1 = Serial.read();
-      if('A' == D1)  //確認起始字元
+      if('A' == D1)  //??????
         {
          Serial.write('A');
        }
-       else if('B' == D1)  //確認起始字元
+       else if('B' == D1)  //??????
         {
-         Serial.write('B');
+         Serial.write('N');
        }
     }    
 
-   delay(1000); 
+   delay(10); 
 }

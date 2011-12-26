@@ -3,19 +3,19 @@
 */
 boolean state =0;     //1:HIGH  ;  0:LOW
 int ledPin = 13; 
-int PIRSensor = 2; // PIR 模組訊號
+int PIRSensor = 2; // PIR ????
 
 void setup() 
 {
   pinMode(ledPin, OUTPUT);
-  pinMode(PIRSensor, INPUT); // 宣告 PIRSensor狀態為 INPUT
+  pinMode(PIRSensor, INPUT); // ?? PIRSensor??? INPUT
   digitalWrite(ledPin, LOW);
   Serial.begin(9600);
 }
 
 void loop() 
 {
-  state = digitalRead(PIRSensor); // 讀取目前狀態
+  state = digitalRead(PIRSensor); // ??????
   digitalWrite(ledPin, state);
   if (HIGH == state)
   {
