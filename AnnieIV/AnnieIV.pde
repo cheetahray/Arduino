@@ -26,6 +26,10 @@ void setup() {
   ** do this, DmxSimple will set the maximum channel number to the
   ** highest channel you DmxSimple.write() to. */
   DmxSimple.maxChannel(4);
+  DmxSimple.write(1, 255);
+  DmxSimple.write(2, 255);
+  DmxSimple.write(3, 255);
+  DmxSimple.write(4, 255);
 }
 
 void loop() {
@@ -52,15 +56,11 @@ void loop() {
       DmxSimple.write(1, 0);
     else if (c=='o')
     {
-      DmxSimple.write(2, 255);
-      DmxSimple.write(3, 255);
-      DmxSimple.write(4, 255);
       DmxSimple.write(1, 255);
     }
     else if (c=='w') 
     {
       DmxSimple.write(channel, value);
-      //Serial.println();
       timeDelay();
     }
     value = 0;
@@ -69,7 +69,7 @@ void loop() {
 
 void timeDelay() {
   int brightness;
-  delayTime = ( (delayTime >> 1) / 255 );
+  delayTime = ( (delayTime >> 1) / 254 );
   /* Simple loop to ramp up brightness */
   for (brightness = 0; brightness <= 255; brightness++) {
     
