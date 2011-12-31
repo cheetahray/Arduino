@@ -14,17 +14,17 @@ void loop()
 {
   if(Serial.available() > 0)  
   {
-    char D1 = Serial.read();
+    char D1;
+    while('N' == ( D1 = Serial.read() ) )  //確認起始字元
+    {
+      //Serial.write('B');
+      digitalWrite(ledPin, LOW);
+    }
     if('A' == D1)  //確認起始字元
     {
       digitalWrite(ledPin, HIGH);
       Serial.write('A');
     }
-    else if('N' == D1)  //確認起始字元
-    {
-      //Serial.write('B');
-      digitalWrite(ledPin, LOW);
-    }
   }
-  delay(150);
+  delay(100);
 }
