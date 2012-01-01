@@ -69,9 +69,9 @@ void loop() {
 
 void timeDelay() {
   int brightness;
-  delayTime = ( (delayTime >> 1) / 254 );
+  delayTime = ( (delayTime >> 1) / 235 );
   /* Simple loop to ramp up brightness */
-  for (brightness = 0; brightness <= 255; brightness++) {
+  for (brightness = 15; brightness <= 255; brightness++) {
     
     /* Update DMX channel 1 to new brightness */
     DmxSimple.write(1, brightness);
@@ -79,7 +79,7 @@ void timeDelay() {
     /* Small delay to slow down the ramping */
     delay(delayTime);
   }
-  for (brightness = 255; brightness >= 0; brightness--) {
+  for (brightness = 255; brightness >= 15; brightness--) {
     
     /* Update DMX channel 1 to new brightness */
     DmxSimple.write(1, brightness);
