@@ -21,26 +21,25 @@ void loop()
   if ( cell.available() > 0 )
   {
     result = cell.read();
-    
-      Serial.print(result);
-      *cptr++ = result;
-      if(true == readyBreak && 10 == result)
+    Serial.print(result);
+    *cptr++ = result;
+    if(true == readyBreak && 10 == result)
+    {
+      *(cptr-2) = 0;
+      cptr = bytes;
+      if (strncmp(bytes, "+SIND: 4",8) == 0 )
       {
-        *(cptr-2) = 0;
-        cptr = bytes;
-        if (strncmp(bytes, "+SIND: 4",8) == 0 )
-        {
-          cnmi = true;
-        }
-        else if (strncmp(bytes, "+CMT: ",6) == 0 )
-        {
-          parsepdu = true;
-        }
+        cnmi = true;
       }
-      if(13 == result)
+      else if (strncmp(bytes, "+CMT:",5) == 0 )
       {
-        readyBreak = true;
+        parsepdu = true;
       }
+    }
+    if(13 == result)
+    {
+      readyBreak = true;
+    }
   }
 
   //If a character is coming from the terminal to the Arduino...
@@ -60,6 +59,34 @@ void loop()
   if(true == parsepdu)
   {
     parsepdu = false;
+    PDU pdu(bytes);
+    
+    if (!pdu.parse())
+    {
+      Serial.print("PDU parsing failed. Error: ");
+      Serial.println(pdu.getError());
+      return;
+    }
+    
+    Serial.print("PDU: ");
+    Serial.println(pdu.getPDU());
+    Serial.print("SMSC: ");
+    Serial.println(pdu.getSMSC());
+    Serial.print("Sender: ");
+    Serial.println(pdu.getNumber());
+    Serial.print("Sender Number Type: ");
+    Serial.println(pdu.getNumberType());
+    Serial.print("Date: ");
+    Serial.println(pdu.getDate());
+    Serial.print("Time: ");
+    Serial.println(pdu.getTime());
+    Serial.print("UDH Type: ");
+    Serial.println(pdu.getUDHType());
+    Serial.print("UDH Data: ");
+    Serial.println(pdu.getUDHData());
+    Serial.print("Message: ");
+    Serial.println(pdu.getMessage());
+    
   }
-  
+
 }

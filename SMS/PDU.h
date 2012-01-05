@@ -20,7 +20,7 @@ public:
     // Constructors/Destructors
     PDU();
     PDU(const char *pdu);
-    virtual ~PDU();
+    ~PDU();
 
     // Getters
     inline const char* getPDU() const { return m_pdu; }
