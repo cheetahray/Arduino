@@ -4,7 +4,7 @@
 //#include <iconv.h>
 #include "pdu.h"
 #include <stdlib.h>
-
+/*
 // Global constants. FIXME: set correct values
 const int max_number = 64;
 const int max_number_type = 1024;
@@ -18,6 +18,9 @@ const int maxsms_binary = 140;
 const int max_message = maxsms_binary * 4;
 const int validity_period = 255;
 const int max_pdu = 160;
+*/
+int octet2bin(const char* octet);
+int octet2bin_check(const char *octet);
 
 // Utility functions
 // Converts an octet to a 8-Bit value
@@ -50,11 +53,13 @@ int octet2bin_check(const char *octet)
     return octet2bin(octet);
 }
 
+void swapchars(char* string);
+
 // Swap every second character
 void swapchars(char* string)
 {
     char c;
-    int length = strlen(string);
+    int length = (int)strlen(string);
     for (int i = 0; i < length - 1; i += 2)
     {
         c = string[i];
@@ -62,7 +67,7 @@ void swapchars(char* string)
         string[i + 1] = c;
     }
 }
-
+int explain_udh(char *udh_type, const char *pdu);
 // Returns a length of udh (including UDHL), -1 if error.
 // pdu is 0-terminated ascii(hex) pdu string with
 // or without spaces.
@@ -172,7 +177,7 @@ int explain_udh(char *udh_type, const char *pdu)
 
     return udh_length;
 }
-
+void explain_status(char *dest, size_t size_dest, int status);
 void explain_status(char *dest, size_t size_dest, int status)
 {
         const char *p = "unknown";
@@ -227,7 +232,8 @@ void explain_status(char *dest, size_t size_dest, int status)
                 //snprintf(dest, size_dest, "%s", p);
 				sprintf(dest, "%s", p);
 }
-
+int pdu2text(const char *pdu, char *text, int *text_length, int *expected_length,
+             int with_udh, char *udh, char *udh_type, int *errorpos);
 int pdu2text(const char *pdu, char *text, int *text_length, int *expected_length,
              int with_udh, char *udh, char *udh_type, int *errorpos)
 {
@@ -365,12 +371,14 @@ int pdu2text(const char *pdu, char *text, int *text_length, int *expected_length
         text[charcounter -skip_characters] = 0;
     return charcounter -skip_characters;
 }
-
+int pdu2text0(char *pdu, char *text);
 int pdu2text0(char *pdu, char *text)
 {
     return pdu2text(pdu, text, 0, 0, 0, 0, 0, 0);
 }
-
+int pdu2binary(const char* pdu, char* binary, int *data_length,
+               int *expected_length, int with_udh, char *udh, char *udh_type,
+               int *errorpos);
 // Converts a PDU string to binary. Return -1 if there is a PDU error, -2 if PDU is too short.
 // Version > 3.0.9, > 3.1beta6 handles also udh.
 int pdu2binary(const char* pdu, char* binary, int *data_length,
@@ -468,7 +476,7 @@ int pdu2binary(const char* pdu, char* binary, int *data_length,
     *data_length = octets -skip_octets;
     return octets -skip_octets;
 }
-
+int text2pdu(char* text, int length, char* pdu, char* udh);
 // Converts an ascii text to a pdu string
 // text might contain zero values because this is a valid character code in sms
 // character set. Therefore we need the length parameter.
@@ -494,7 +502,7 @@ int text2pdu(char* text, int length, char* pdu, char* udh)
     // Check the udh
     if (udh)
     {
-        udh_size_octets = (strlen(udh) + 2) / 3;
+        udh_size_octets = (int)(strlen(udh) + 2) / 3;
         udh_size_septets = ((udh_size_octets) * 8 + 6) / 7;
         fillbits = 7 - (udh_size_octets % 7);
         if (fillbits == 7)
@@ -544,7 +552,7 @@ int text2pdu(char* text, int length, char* pdu, char* udh)
     }
     return counted_characters + udh_size_septets;
 }
-
+void binary2pdu(char* binary, int length, char* pdu);
 /* Converts binary to PDU string, this is basically a hex dump. */
 void binary2pdu(char* binary, int length, char* pdu)
 {
@@ -563,36 +571,32 @@ void binary2pdu(char* binary, int length, char* pdu)
 
 // Constructors/destructor
 PDU::PDU() :
-    m_pdu(NULL), m_pdu_ptr(NULL), m_message(NULL), m_message_len(-1),
-    m_smsc(NULL), m_number(NULL), m_number_type(NULL), m_number_fmt(NF_UNKNOWN),
-    m_date(NULL), m_time(NULL), m_udh_type(NULL), m_udh_data(NULL), m_err(NULL),
+    m_message_len(-1), m_number_fmt(NF_UNKNOWN),
     m_with_udh(false), m_report(false), m_is_statusreport(false), m_replace(0),
     m_alphabet(-1), m_flash(false), m_mode(NULL), m_validity(170),
     m_system_msg(0), m_replace_msg(0)
 {
     m_mode = "new";
-    m_pdu = (char*)malloc(max_pdu);
+    //m_pdu = (char*)malloc(max_pdu);
 }
 
 PDU::PDU(const char *pdu) :
-    m_pdu(NULL), m_pdu_ptr(NULL), m_message(NULL), m_message_len(-1),
-    m_smsc(NULL), m_number(NULL), m_number_type(NULL), m_number_fmt(NF_UNKNOWN),
-    m_date(NULL), m_time(NULL), m_udh_type(NULL), m_udh_data(NULL), m_err(NULL),
+    m_message_len(-1), m_number_fmt(NF_UNKNOWN),
     m_with_udh(false), m_report(false), m_is_statusreport(false), m_replace(0),
     m_alphabet(-1), m_flash(false), m_mode(NULL), m_validity(170),
     m_system_msg(0), m_replace_msg(0)
 {
     if (pdu)
     {
-        m_pdu = strdup(pdu);
+        strcpy(m_pdu, pdu);//m_pdu = strdup(pdu);
         m_pdu_ptr = m_pdu;
-        m_err = (char*)malloc(max_err);
+        //m_err = (char*)malloc(max_err);
         m_err[0] = '\0';
     }
 }
 
 PDU::~PDU()
-{
+{   /*
     if (m_pdu)
         free(m_pdu);
 
@@ -622,55 +626,55 @@ PDU::~PDU()
         free(m_udh_data);
 
     if (m_err)
-        free(m_err);
+        free(m_err); */
 }
 
 // Utility methods
 void PDU::reset()
 {
-    if (m_number)
-        free(m_number);
-    m_number = (char*)malloc(max_number);
+    //if (m_number)
+        //free(m_number);
+    //m_number = (char*)malloc(max_number);
     m_number[0] = '\0';
 
-    if (m_number_type)
-        free(m_number_type);
-    m_number_type = (char*)malloc(max_number_type);
+    //if (m_number_type)
+        //free(m_number_type);
+    //m_number_type = (char*)malloc(max_number_type);
     m_number_type[0] = '\0';
 
-    if (m_smsc)
-        free(m_smsc);
-    m_smsc = (char*)malloc(max_smsc);
+    //if (m_smsc)
+        //free(m_smsc);
+    //m_smsc = (char*)malloc(max_smsc);
     m_smsc[0] = '\0';
 
-    if (m_message)
-        free(m_message);
-    m_message = (char*)malloc(max_message);
+    //if (m_message)
+        //free(m_message);
+    //m_message = (char*)malloc(max_message);
     m_message[0] = '\0';
     m_message_len = 0;
 
-    if (m_date)
-        free(m_date);
-    m_date = (char*)malloc(max_date);
+    //if (m_date)
+        //free(m_date);
+    //m_date = (char*)malloc(max_date);
     m_date[0] = '\0';
 
-    if (m_time)
-        free(m_time);
-    m_time = (char*)malloc(max_time);
+    //if (m_time)
+        //free(m_time);
+    //m_time = (char*)malloc(max_time);
     m_time[0] = '\0';
 
-    if (m_udh_type)
-        free(m_udh_type);
-    m_udh_type = (char*)malloc(max_udh_type);
+    //if (m_udh_type)
+        //free(m_udh_type);
+    //m_udh_type = (char*)malloc(max_udh_type);
     m_udh_type[0] = '\0';
 
-    if (m_udh_data)
-        free(m_udh_data);
-    m_udh_data = (char*)malloc(max_udh_data);
+    //if (m_udh_data)
+        //free(m_udh_data);
+    //m_udh_data = (char*)malloc(max_udh_data);
     m_udh_data[0] = '\0';
 
-    if (!m_err)
-        m_err = (char*)malloc(max_err);
+    //if (!m_err)
+        //m_err = (char*)malloc(max_err);
     m_err[0] = '\0';
 
     m_with_udh = false;
@@ -761,8 +765,8 @@ bool PDU::parse()
         m_pdu_ptr += 2;
         if (!parseDeliver())
             return false;
-        if (m_alphabet == 2)
-            ;//convert("UTF8", "UTF16BE");
+        //if (m_alphabet == 2)
+            //convert("UTF8", "UTF16BE");
     }
     else if (type == 2) // Status Report
     {
@@ -891,8 +895,8 @@ int PDU::explainAddressType(const char *octet_char, int octet_int)
             case 6: p = "abbreviated"; break;
         }
 
-        sprintf(m_number_type, p);
-
+        strcpy(m_number_type, p);//sprintf(m_number_type, p);
+        
         switch (result & 0x0F)
         {
             case 0: p = "unknown"; break;
@@ -1054,7 +1058,7 @@ bool PDU::parseDeliver()
     {
         sprintf(m_err, "Invalid values(s) in date of Service Centre Time Stamp.\n");
     }
-    sprintf(m_date, str_buf);
+    strcpy(m_date, str_buf);//sprintf(m_date, str_buf);
 
     // Time
     m_pdu_ptr += 6;
@@ -1070,7 +1074,7 @@ bool PDU::parseDeliver()
     {
         sprintf(m_err, "Invalid values(s) in time of Service Centre Time Stamp.\n");
     }
-    sprintf(m_time, str_buf);
+    strcpy(m_time, str_buf);//sprintf(m_time, str_buf);
 
     m_pdu_ptr += 6;
     // Time zone is not used but bytes are checked:
@@ -1239,7 +1243,7 @@ bool PDU::parseStatusReport()
         {
                 sprintf(m_err, "Invalid value(s) in date of SMSC Timestamp.");
         }
-        sprintf(m_date, str_buf);
+        strcpy(m_date, str_buf);//sprintf(m_date, str_buf);
 
         m_pdu_ptr += 6;
         sprintf(str_buf, "%c%c:%c%c:%c%c", m_pdu_ptr[1], m_pdu_ptr[0], m_pdu_ptr[3],
@@ -1254,7 +1258,7 @@ bool PDU::parseStatusReport()
         {
                 sprintf(m_err, "Invalid value(s) in time of SMSC Timestamp.");
         }
-        sprintf(m_time, str_buf);
+        strcpy(m_time, str_buf);//sprintf(m_time, str_buf);
 
         m_pdu_ptr += 6;
         // Time zone is not used but bytes are checked:
@@ -1339,8 +1343,8 @@ void PDU::generateII()
     int l;
     char tmp_smsc[max_smsc];
 
-    if (m_alphabet == 2)
-        ;//convert("UTF16BE", "UTF8");
+    //if (m_alphabet == 2)
+        //convert("UTF16BE", "UTF8");
 
     if (m_number[0] == 's')  // Is number starts with s, then send it without number format indicator
     {
@@ -1355,7 +1359,7 @@ void PDU::generateII()
 		sprintf(tmp, "%s", m_number);
     }
 
-    numberlength = strlen(tmp);
+    numberlength = (int)strlen(tmp);
     // terminate the number with F if the length is odd
     if (numberlength % 2)
         strcat(tmp, "F");
@@ -1405,7 +1409,7 @@ void PDU::generateII()
             while ((p = strchr(tmp2, ' ')))
                 memmove(p, p + 1, strlen(p + 1) + 1);
                 //strcpyo(p, p + 1);
-            l = strlen(tmp2) / 2;
+            l = (int)strlen(tmp2) / 2;
             binary2pdu(m_message, m_message_len, strchr(tmp2, 0));
             m_message_len += l;
         }
@@ -1448,7 +1452,7 @@ void PDU::generateII()
         else
             strcpy(m_pdu, "00");
 
-        smsc_len = strlen(m_pdu);
+        smsc_len = (int)strlen(m_pdu);
 
         sprintf(strchr(m_pdu, 0), "%02X00%02X%02X%s%02X%02X%02X%02X", flags,
                 numberlength, numberformat, tmp, proto, coding, m_validity,
@@ -1457,9 +1461,9 @@ void PDU::generateII()
     }
     /* concatenate the text to the PDU string */
     strcat(m_pdu,tmp2);
-    m_message_len = (strlen(m_pdu) - smsc_len)/2;
+    m_message_len = (int)(strlen(m_pdu) - smsc_len)/2;
 }
-
+/*
 // Setters
 void PDU::setMessage(const char* message, const int message_len)
 {
@@ -1498,3 +1502,4 @@ void PDU::setAlphabet(const Alphabet alphabet)
 {
     m_alphabet = (int)alphabet;
 }
+*/

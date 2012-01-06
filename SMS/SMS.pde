@@ -3,7 +3,7 @@
 #include "PDU.h"
 
 char bytes[160], *cptr, result;
-boolean readyBreak, cnmi, parsepdu;  
+boolean readyBreak, cnmi, parsepdu, ready;  
 NewSoftSerial cell(2,3);  //Create a 'fake' serial port. Pin 2 is the Rx pin, pin 3 is the Tx pin.
 
 void setup()
@@ -13,7 +13,7 @@ void setup()
   cell.begin(9600);
   bytes[0] = 0;
   cptr = bytes;
-  readyBreak = cnmi = parsepdu = false;
+  readyBreak = cnmi = parsepdu = ready = false;
 }
 
 void loop()
@@ -48,26 +48,27 @@ void loop()
     result=Serial.read();  //Get the character coming from the terminal
     cell.print(result);    //Send the character to the cellular module.
   }
-  
+
   if(true == cnmi)
   {
     cnmi = false;
     Serial.println("at+cnmi=2,2");
     cell.println("at+cnmi=2,2");
+    ready = true;
   }
   
-  if(true == parsepdu)
+  if(true == ready && true == parsepdu)
   {
     parsepdu = false;
     PDU pdu(bytes);
-    
+
     if (!pdu.parse())
     {
       Serial.print("PDU parsing failed. Error: ");
       Serial.println(pdu.getError());
       return;
     }
-    
+
     Serial.print("PDU: ");
     Serial.println(pdu.getPDU());
     Serial.print("SMSC: ");
@@ -86,7 +87,7 @@ void loop()
     Serial.println(pdu.getUDHData());
     Serial.print("Message: ");
     Serial.println(pdu.getMessage());
-    
-  }
 
+  }
+  
 }

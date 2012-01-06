@@ -1,6 +1,18 @@
 #ifndef PDU_H
 #define PDU_H
 
+#define max_number  64
+#define max_number_type  1024
+#define max_smsc  64
+#define max_date 32
+#define max_time  32
+#define max_udh_data  512
+#define max_udh_type  512
+#define max_err  1024
+#define maxsms_binary  140
+#define max_message  maxsms_binary<<2
+#define validity_period  255
+#define max_pdu  160
 
 class PDU {
 public:
@@ -34,13 +46,13 @@ public:
     inline const char* getMessage() const { return m_message; }
     inline const char* getError() const { return m_err; }
     inline const int getMessageLen() const { return m_message_len; }
-
+    /*
     // Setters
     void setMessage(const char* message, const int message_len = -1);
     void setSMSC(const char* smsc);
     void setNumber(const char* number);
     void setAlphabet(const Alphabet alphabet);
-
+    */
     //
     bool parse();
     void generateII();
@@ -48,19 +60,19 @@ public:
     // iconv
     //int convert(const char *tocode, const char *fromcode);
 private:
-    char* m_pdu;
+    char m_pdu[max_pdu];
     char* m_pdu_ptr;
-    char* m_message;
+    char m_message[max_message];
     int m_message_len;
-    char* m_smsc;
-    char* m_number;
-    char* m_number_type;
+    char m_smsc[max_smsc];
+    char m_number[max_number];
+    char m_number_type[max_number_type];
     NumerFormat m_number_fmt;
-    char* m_date;
-    char* m_time;
-    char* m_udh_type;
-    char* m_udh_data;
-    char* m_err;
+    char m_date[max_date];
+    char m_time[max_time];
+    char m_udh_type[max_udh_type];
+    char m_udh_data[max_udh_data];
+    char m_err[max_err];
     bool m_with_udh;
     bool m_report;
     bool m_is_statusreport;
