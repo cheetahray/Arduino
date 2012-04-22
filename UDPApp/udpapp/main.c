@@ -64,17 +64,20 @@ int main (int argc, const char * argv[])
 	buf[numbytes] = '\0';
 	printf("%s", buf);
     
-	// Get name from user
-	scanf("%s", buf);
-	buf_len = strlen(buf);
-	buf[buf_len] = '\n';
+    while(1)
+    {
+        // Get name from user
+        scanf("%s", buf);
+        buf_len = strlen(buf);
+        buf[buf_len] = '\n';
     
-	// Send response to WiShield
-	if ((numbytes = sendto(sockfd, buf, buf_len+1, 0, (struct sockaddr *)&remote, sizeof(remote))) == -1) {
-		perror("sendto");
-		exit(1);
-	}
-    
+        // Send response to WiShield
+        if ((numbytes = sendto(sockfd, buf, buf_len+1, 0, (struct sockaddr *)&remote, sizeof(remote))) == -1) {
+            perror("sendto");
+            exit(1);
+        }
+    }
+    /*
 	// Wait for greeting
 	addr_len = sizeof(remote);
 	if ((numbytes = recvfrom(sockfd, buf, MAXDATASIZE-1 , 0, (struct sockaddr *)&remote, &addr_len)) == -1) {
@@ -83,7 +86,7 @@ int main (int argc, const char * argv[])
 	}
 	buf[numbytes] = '\0';
 	printf("%s", buf);
-    
+    */
 	close(sockfd);
 
     return 0;
