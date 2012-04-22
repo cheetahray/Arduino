@@ -36,14 +36,14 @@
 #include <string.h>
 #include "udpapp.h"
 #include "config.h"
-#define packetlen 32
+#define packetlen 30
 #define STATE_INIT				0
 #define STATE_LISTENING         1
 #define STATE_HELLO_RECEIVED	2
 #define STATE_HELLO_ORDER		3
 //#define STATE_NAME_RECEIVED		4
 static struct udpapp_state s;
-extern char message[packetlen];
+extern char message[packetlen+2];
 void dummy_app_appcall(void)
 {
 }
@@ -54,7 +54,7 @@ void udpapp_init(void)
         struct uip_udp_conn *c;
 
         //uip_ipaddr(&addr, 192,168,1,100);
-        uip_ipaddr(&addr, 192,168,2,108);
+        uip_ipaddr(&addr, 255,255,255,255);
         c = uip_udp_new(&addr, HTONS(12345));
         if(c != NULL) 
         {
@@ -78,28 +78,30 @@ static unsigned char parse_msg(void)
 static void send_request(void)
 {
 	char str[] = "Hello. What is your name?\n";
-
-	memcpy(uip_appdata, str, strlen(str));
-	uip_send(uip_appdata, strlen(str));
+        memset(message, 0x00, packetlen);
+        memcpy(message, str, strlen(str));
+	uip_send(message, strlen(str));
 }
 
 static void send_response(void)
 {
+	/*
 	char i = 0;
-	//char str[] = "Hello ";
+	char str[] = "Hello ";
 
-	while ( ( ((char*)uip_appdata)[i] != '\n') && i < 9) {
+	while ( ( ((char*)uip_appdata)[i] != '\0') && i < packetlen) {
 		s.inputbuf[i] = ((char*)uip_appdata)[i];
 		i++;
 	}
-	s.inputbuf[i] = '\n';
-        /*
-	memcpy(uip_appdata, str, 6);
+	s.inputbuf[i] = '\0';
+        
+        memcpy(uip_appdata, str, 6);
 	memcpy(uip_appdata+6, s.inputbuf, i+1);
 	uip_send(uip_appdata, i+7);
         */
         memset(message, 0x00, packetlen);
-        memcpy(message, s.inputbuf, i+1);
+        memcpy(message, uip_appdata, packetlen);
+        message[packetlen] = 0;
 }
 
 static PT_THREAD(handle_connection(void))

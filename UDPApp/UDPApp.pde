@@ -50,7 +50,7 @@ void loop()
 {
   if(message[0] != 0)
     {
-      Serial.print(message);
+      Serial.println(message);
       
       if(!strncmp(message, "forward", packetlen))
         forward(0,0);
