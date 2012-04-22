@@ -37,13 +37,14 @@
 #include "udpapp.h"
 #include "config.h"
 #define packetlen 30
+#define diff 2
 #define STATE_INIT				0
 #define STATE_LISTENING         1
 #define STATE_HELLO_RECEIVED	2
 #define STATE_HELLO_ORDER		3
 //#define STATE_NAME_RECEIVED		4
 static struct udpapp_state s;
-extern char message[packetlen+2];
+extern char message[packetlen+diff];
 void dummy_app_appcall(void)
 {
 }
@@ -78,7 +79,7 @@ static unsigned char parse_msg(void)
 static void send_request(void)
 {
 	char str[] = "Hello. What is your name?";
-        memset(message, 0x00, packetlen);
+        memset(message, 0x00, packetlen+diff);
         memcpy(message, str, strlen(str));
 	uip_send(message, strlen(str));
 }
@@ -99,7 +100,7 @@ static void send_response(void)
 	memcpy(uip_appdata+6, s.inputbuf, i+1);
 	uip_send(uip_appdata, i+7);
         */
-        memset(message, 0x00, packetlen);
+        memset(message, 0x00, packetlen+diff);
         memcpy(message, uip_appdata, packetlen);
         message[packetlen] = 0;
 }
