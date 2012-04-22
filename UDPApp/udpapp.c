@@ -36,14 +36,14 @@
 #include <string.h>
 #include "udpapp.h"
 #include "config.h"
-
+#define packetlen 32
 #define STATE_INIT				0
 #define STATE_LISTENING         1
 #define STATE_HELLO_RECEIVED	2
-#define STATE_NAME_RECEIVED		3
-
+#define STATE_HELLO_ORDER		3
+//#define STATE_NAME_RECEIVED		4
 static struct udpapp_state s;
-
+extern char message[packetlen];
 void dummy_app_appcall(void)
 {
 }
@@ -56,7 +56,8 @@ void udpapp_init(void)
         //uip_ipaddr(&addr, 192,168,1,100);
         uip_ipaddr(&addr, 192,168,2,108);
         c = uip_udp_new(&addr, HTONS(12345));
-        if(c != NULL) {
+        if(c != NULL) 
+        {
            uip_udp_bind(c, HTONS(12344));
         }
 
@@ -71,7 +72,7 @@ static unsigned char parse_msg(void)
 		return 1;
 	}
 
-	return 1;
+	return 0;
 }
 
 static void send_request(void)
@@ -85,17 +86,20 @@ static void send_request(void)
 static void send_response(void)
 {
 	char i = 0;
-	char str[] = "Hello ";
+	//char str[] = "Hello ";
 
 	while ( ( ((char*)uip_appdata)[i] != '\n') && i < 9) {
 		s.inputbuf[i] = ((char*)uip_appdata)[i];
 		i++;
 	}
 	s.inputbuf[i] = '\n';
-
+        /*
 	memcpy(uip_appdata, str, 6);
 	memcpy(uip_appdata+6, s.inputbuf, i+1);
 	uip_send(uip_appdata, i+7);
+        */
+        memset(message, 0x00, packetlen);
+        memcpy(message, s.inputbuf, i+1);
 }
 
 static PT_THREAD(handle_connection(void))
@@ -107,27 +111,25 @@ static PT_THREAD(handle_connection(void))
         do {
 		PT_WAIT_UNTIL(&s.pt, uip_newdata());
 
-		if(uip_newdata() && parse_msg()) {
-			s.state = STATE_HELLO_RECEIVED;
-			uip_flags &= (~UIP_NEWDATA);
-			break;
-		}
-	} while(s.state != STATE_HELLO_RECEIVED);
-        
-        do {
-		send_request();
-		PT_WAIT_UNTIL(&s.pt, uip_newdata());
-
 		if(uip_newdata()) {
-			s.state = STATE_NAME_RECEIVED;
+                    if(parse_msg())
+                    {
+                        s.state = STATE_HELLO_ORDER;
+                        send_request();
 			uip_flags &= (~UIP_NEWDATA);
 			break;
+                    }
+                    else
+                    {
+			s.state = STATE_HELLO_RECEIVED;
+                        send_response();
+        		uip_flags &= (~UIP_NEWDATA);
+			break;
+                    }
 		}
-	} while(s.state != STATE_NAME_RECEIVED);
-
-	send_response();
-
-	s.state = STATE_INIT;
+	} while(s.state < STATE_HELLO_RECEIVED);
+        
+        s.state = STATE_INIT;
 
 	PT_END(&s.pt);
 }

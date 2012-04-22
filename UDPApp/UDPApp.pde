@@ -5,7 +5,7 @@
  */
 
 #include <WiShield.h>
-
+#define packetlen 32
 // Wireless configuration parameters ----------------------------------------
 unsigned char local_ip[]    = {192,168,2,67};   // IP address of WiShield
 unsigned char gateway_ip[]  = {192,168,2,1};   // router or gateway IP address
@@ -31,14 +31,111 @@ unsigned char wireless_mode = WIRELESS_MODE_INFRA;
 unsigned char ssid_len;
 unsigned char security_passphrase_len;
 // End of wireless configuration parameters ----------------------------------------
-
+const int Motor_E1 = 5; // Pin ? of L298N     
+const int Motor_E2 = 6;  // Pin ? of L298N   
+const int Motor_M1 = 7;     // Pin ? of L298N
+const int Motor_M2 = 8;    // Pin ? of L298N
+char message[packetlen];
 
 void setup()
 {
-	WiFi.init();
+	//set up serial communications
+   Serial.begin(9600);
+   WiFi.init();
+   pinMode(Motor_M1, OUTPUT);
+   pinMode(Motor_M2, OUTPUT);
 }
 
 void loop()
 {
+  if(message[0] != 0)
+    {
+      Serial.print(message);
+      
+      if(!strncmp(message, "forward", packetlen))
+        forward(0,0);
+      else if(!strncmp(message, "back", packetlen))
+        back(0,0);
+      else if(!strncmp(message, "left", packetlen))
+        left(0,0);
+      else if(!strncmp(message, "right", packetlen))
+        right(0,0);
+      else if(!strncmp(message, "stop", packetlen))
+        motorstop(0,0);
+    
+      message[0] = 0;
+    }  
 	WiFi.run();
+}
+
+void motorstop(byte flag, byte numOfValues)
+{
+  digitalWrite( Motor_E1, 0);
+  digitalWrite( Motor_E2, 0);
+  Serial.println("stop : ");
+
+}
+
+/*
+ * Whenever app changes value
+ * this function will be called
+ */
+void forward(byte flag, byte numOfValues)
+{
+//  analogWrite(ForwardLED, 255);
+  Serial.println("forward : ");
+
+  digitalWrite( Motor_M1, HIGH);
+  digitalWrite( Motor_M2, HIGH);
+
+  analogWrite( Motor_E1, 255);
+  analogWrite( Motor_E2, 255);
+  
+}
+
+/*
+ * Whenever the multicolor lamp app changes the green value
+ * this function will be called
+ */
+void back(byte flag, byte numOfValues)
+{
+ // analogWrite(BackLED, 255);
+  Serial.println("back : ");
+
+  digitalWrite( Motor_M1, LOW);
+  digitalWrite( Motor_M2, LOW);
+
+  analogWrite( Motor_E1, 255);
+  analogWrite( Motor_E2, 255);
+   
+}
+
+/*
+ * Whenever the multicolor lamp app changes the blue value
+ * this function will be called
+ */
+void right(byte flag, byte numOfValues)
+{
+//  analogWrite(RightLED, 255);
+  Serial.println("right : ");
+
+  digitalWrite( Motor_M1, HIGH);
+  digitalWrite( Motor_M2, HIGH);
+
+  analogWrite( Motor_E1, 255);
+  analogWrite( Motor_E2, 0);
+  
+}
+
+void left(byte flag, byte numOfValues)
+{
+//  analogWrite(LeftLED, 255);
+  Serial.println("left : ");
+
+  digitalWrite( Motor_M1, HIGH);
+  digitalWrite( Motor_M2, HIGH);
+
+  analogWrite( Motor_E1, 0);
+  analogWrite( Motor_E2, 255);
+  
 }
