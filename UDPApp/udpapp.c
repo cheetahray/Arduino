@@ -77,7 +77,7 @@ static unsigned char parse_msg(void)
 
 static void send_request(void)
 {
-	char str[] = "Hello. What is your name?\n";
+	char str[] = "Hello. What is your name?";
         memset(message, 0x00, packetlen);
         memcpy(message, str, strlen(str));
 	uip_send(message, strlen(str));
