@@ -7,10 +7,10 @@
 #include <WiShield.h>
 #define packetlen 32
 // Wireless configuration parameters ----------------------------------------
-unsigned char local_ip[]    = {192,168,2,67};   // IP address of WiShield
-unsigned char gateway_ip[]  = {192,168,2,1};   // router or gateway IP address
+unsigned char local_ip[]    = {192,168,11,67};   // IP address of WiShield
+unsigned char gateway_ip[]  = {192,168,11,1};   // router or gateway IP address
 unsigned char subnet_mask[] = {255,255,255,0}; // subnet mask for the local network
-char ssid[]                 = {"DAC-2F(Workshop)"};   // max 32 bytes
+char ssid[]                 = {"DAC-2F(rear)"};   // max 32 bytes
 unsigned char security_type = 2;               // 0 - open; 1 - WEP; 2 - WPA; 3 - WPA2
 
 // WPA/WPA2 passphrase
