@@ -34,7 +34,7 @@ unsigned int remotePort = 12344; // holds received packet's originating port
 // buffers for receiving and sending data
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; //buffer to hold incoming packet,
 char  ReplyBuffer[] = "Hello";       // a string to send back
-
+char  RequestBuffer[] = "010110011001100110011001100110";
 
 void setup() {
   // start the Ethernet and UDP:
@@ -46,7 +46,7 @@ void setup() {
 
 void loop() {
 
-  Udp.sendPacket( ReplyBuffer, remoteIp, remotePort);
+  Udp.sendPacket( RequestBuffer, remoteIp, remotePort);
   // if there's data available, read a packet
   int packetSize = Udp.available(); // note that this includes the UDP header
   if(packetSize)
@@ -61,7 +61,7 @@ void loop() {
     Serial.println(packetBuffer);
     
   }
-  delay(100);
+  delay(1000);
 }
 
 
