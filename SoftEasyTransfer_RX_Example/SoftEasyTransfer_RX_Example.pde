@@ -1,8 +1,8 @@
 #include <SoftEasyTransfer.h>
 
 /*   For Arduino 1.0 and newer, do this:   */
-#include <SoftwareSerial.h>
-SoftwareSerial mySerial(2, 3);
+#include <NewSoftSerial.h>
+NewSoftSerial mySerial(2, 3);
 
 /*   For Arduino 22 and older, do this:   */
 //#include <NewSoftSerial.h>
@@ -44,5 +44,5 @@ void loop(){
     }
   }
   //you should make this delay shorter then your transmit delay or else messages could be lost
-  delay(250);
+  delay(100);
 }

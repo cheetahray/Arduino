@@ -1,8 +1,8 @@
 #include <SoftEasyTransfer.h>
 
 /*   For Arduino 1.0 and newer, do this:   */
-#include <SoftwareSerial.h>
-SoftwareSerial mySerial(2, 3);
+#include <NewSoftSerial.h>
+NewSoftSerial mySerial(2, 3);
 
 /*   For Arduino 22 and older, do this:   */
 //#include <NewSoftSerial.h>
@@ -49,5 +49,5 @@ void loop(){
       delay(mydata.pause * 100);
     }
   
-  delay(5000);
+  delay(100);
 }
