@@ -44,5 +44,5 @@ void loop(){
     }
   }
   //you should make this delay shorter then your transmit delay or else messages could be lost
-  delay(100);
+  //delay(100);
 }

@@ -49,5 +49,5 @@ void loop(){
       delay(mydata.pause * 100);
     }
   
-  delay(100);
+  //delay(100);
 }
