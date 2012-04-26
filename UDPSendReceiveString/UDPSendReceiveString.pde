@@ -17,7 +17,7 @@
 #include <Ethernet.h>
 #include <Udp.h>         // UDP library from: bjoern@cs.stanford.edu 12/30/2008
 
-
+#define packetlen 32
 // Enter a MAC address and IP address for your controller below.
 // The IP address will be dependent on your local network:
 byte mac[] = {  
@@ -32,36 +32,54 @@ byte remoteIp[4] = {255,255,255,255};        // holds received packet's originat
 unsigned int remotePort = 12344; // holds received packet's originating port
 
 // buffers for receiving and sending data
-char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; //buffer to hold incoming packet,
-char  ReplyBuffer[] = "Hello";       // a string to send back
-char  RequestBuffer[] = "010110011001100110011001100110";
-
+char  ReplyBuffer[UDP_TX_PACKET_MAX_SIZE]; //buffer to hold incoming packet,
+char  NoiseBuffer[packetlen];// = "Hello";       // a string to send back
+char  RequestBuffer[packetlen];// = "010110011001100110011001100110";
+int   count, packetSize;
 void setup() {
   // start the Ethernet and UDP:
   Ethernet.begin(mac,ip);
   Udp.begin(localPort);
-  
+  count = 0;
   Serial.begin(9600);
 }
 
-void loop() {
+void loop() 
+{
 
-  Udp.sendPacket( RequestBuffer, remoteIp, remotePort);
-  // if there's data available, read a packet
-  int packetSize = Udp.available(); // note that this includes the UDP header
-  if(packetSize)
+  if (Serial.available() > 0) 
+  {
+    // read the incoming byte:
+    RequestBuffer[count++] = Serial.read();
+    delay(10);
+  }
+  else if( RequestBuffer[0] != 0 )
+  {
+    Serial.println( RequestBuffer );
+    Udp.sendPacket( RequestBuffer, remoteIp, remotePort);
+    // if there's data available, read a packet
+    memset(RequestBuffer,0,packetlen);
+    count = 0;
+  }
+  else if( NoiseBuffer[0] != 0 )
+  {
+    Serial.println( NoiseBuffer );
+    Udp.sendPacket( NoiseBuffer, remoteIp, remotePort);
+    // if there's data available, read a packet
+    memset(NoiseBuffer,0,packetlen);
+  }
+  else if( packetSize = Udp.available() )
   {
     packetSize = packetSize - 8;      // subtract the 8 byte header
     Serial.print("Received packet of size ");
     Serial.println(packetSize);
 
     // read the packet into packetBufffer and get the senders IP addr and port number
-    Udp.readPacket(packetBuffer,UDP_TX_PACKET_MAX_SIZE, remoteIp, remotePort);
+    Udp.readPacket(ReplyBuffer,UDP_TX_PACKET_MAX_SIZE, remoteIp, remotePort);
     Serial.println("Contents:");
-    Serial.println(packetBuffer);
-    
+    Serial.println(ReplyBuffer);
   }
-  delay(1000);
+  
 }
 
 
