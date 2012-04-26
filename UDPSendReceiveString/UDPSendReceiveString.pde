@@ -51,7 +51,7 @@ void loop()
   {
     // read the incoming byte:
     RequestBuffer[count++] = Serial.read();
-    delay(10);
+    delay(33);
   }
   else if( RequestBuffer[0] != 0 )
   {
@@ -60,6 +60,7 @@ void loop()
     // if there's data available, read a packet
     memset(RequestBuffer,0,packetlen);
     count = 0;
+    delay(990);
   }
   else if( NoiseBuffer[0] != 0 )
   {
@@ -67,6 +68,7 @@ void loop()
     Udp.sendPacket( NoiseBuffer, remoteIp, remotePort);
     // if there's data available, read a packet
     memset(NoiseBuffer,0,packetlen);
+    delay(100);
   }
   else if( packetSize = Udp.available() )
   {
