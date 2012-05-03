@@ -1,20 +1,22 @@
 /*
- * UDP endpoint
- *
- * A simple UDP endpoint example using the WiShield 1.0
- */
+  Blink
+  Turns on an LED on for one second, then off for one second, repeatedly.
 
+  This example code is in the public domain.
+ */
 #include <WiShield.h>
+
+#define DEBUG
 #define packetlen 32
 // Wireless configuration parameters ----------------------------------------
-unsigned char local_ip[]    = {192,168,11,167};   // IP address of WiShield
-unsigned char gateway_ip[]  = {192,168,11,1};   // router or gateway IP address
+unsigned char local_ip[]    = {192,168,13,167};   // IP address of WiShield
+unsigned char gateway_ip[]  = {192,168,13,1};   // router or gateway IP address
 unsigned char subnet_mask[] = {255,255,255,0}; // subnet mask for the local network
-char ssid[]                 = {"DAC-2F(rear)"};   // max 32 bytes
+char ssid[]                 = {"NoiseKitchen"};   // max 32 bytes
 unsigned char security_type = 2;               // 0 - open; 1 - WEP; 2 - WPA; 3 - WPA2
 
 // WPA/WPA2 passphrase
-const prog_char security_passphrase[] PROGMEM = {"yellowsub"};	// max 64 characters
+const prog_char security_passphrase[] PROGMEM = {"NoiseIsFree"};	// max 64 characters
 
 // WEP 128-bit keys
 prog_uchar wep_keys[] PROGMEM = { 
@@ -31,111 +33,51 @@ unsigned char wireless_mode = WIRELESS_MODE_INFRA;
 unsigned char ssid_len;
 unsigned char security_passphrase_len;
 // End of wireless configuration parameters ----------------------------------------
-const int Motor_E1 = 5; // Pin ? of L298N     
-const int Motor_E2 = 6;  // Pin ? of L298N   
-const int Motor_M1 = 7;     // Pin ? of L298N
-const int Motor_M2 = 8;    // Pin ? of L298N
+
 char message[packetlen];
 
-void setup()
-{
-	//set up serial communications
+int ar[] = {3,4,5,6,7,19,18};
+
+void setup() {
+  // initialize the digital pin as an output.
+  // Pin 13 has an LED connected on most Arduino boards:
+   for( int i=0; i<8; i++) 
+        pinMode(ar[i], OUTPUT);   // set the LED on
+  
    Serial.begin(9600);
+  
    WiFi.init();
-   pinMode(Motor_M1, OUTPUT);
-   pinMode(Motor_M2, OUTPUT);
 }
 
-void loop()
-{
+void loop() {
+
   if(message[0] != 0)
     {
+      #ifdef DEBUG
       Serial.println(message);
-      
-      if(!strncmp(message, "forward", packetlen))
-        forward(0,0);
-      else if(!strncmp(message, "back", packetlen))
-        back(0,0);
-      else if(!strncmp(message, "left", packetlen))
-        left(0,0);
-      else if(!strncmp(message, "right", packetlen))
-        right(0,0);
-      else if(!strncmp(message, "stop", packetlen))
-        motorstop(0,0);
+      #endif
+      for( int i=0; i<8; i++) 
+        digitalWrite(ar[i], message[i+16]-'0');   // set the LED on
     
       message[0] = 0;
     }  
 	WiFi.run();
-}
-
-void motorstop(byte flag, byte numOfValues)
-{
-  digitalWrite( Motor_E1, 0);
-  digitalWrite( Motor_E2, 0);
-  Serial.println("stop : ");
-
-}
 
 /*
- * Whenever app changes value
- * this function will be called
- */
-void forward(byte flag, byte numOfValues)
-{
-//  analogWrite(ForwardLED, 255);
-  Serial.println("forward : ");
-
-  digitalWrite( Motor_M1, HIGH);
-  digitalWrite( Motor_M2, HIGH);
-
-  analogWrite( Motor_E1, 255);
-  analogWrite( Motor_E2, 255);
-  
+  int rnd1 = random(7);
+  int rnd = ar[rnd1];
+  int rnd2 = random(1,4)*200;
+  for( int i=0; i<8; i++) {
+    digitalWrite(ar[i], HIGH);   // set the LED on
+    delay(rnd2);
+    digitalWrite(ar[i], LOW);   // set the LED on
+    delay(rnd2);
 }
 
-/*
- * Whenever the multicolor lamp app changes the green value
- * this function will be called
- */
-void back(byte flag, byte numOfValues)
-{
- // analogWrite(BackLED, 255);
-  Serial.println("back : ");
-
-  digitalWrite( Motor_M1, LOW);
-  digitalWrite( Motor_M2, LOW);
-
-  analogWrite( Motor_E1, 255);
-  analogWrite( Motor_E2, 255);
    
-}
-
-/*
- * Whenever the multicolor lamp app changes the blue value
- * this function will be called
+  digitalWrite(rnd, HIGH);   // set the LED on
+  delay(random(2)*100);              // wait for a second
+  digitalWrite(rnd, LOW);    // set the LED off
+  delay(random(2)*500);              // wait for a second
  */
-void right(byte flag, byte numOfValues)
-{
-//  analogWrite(RightLED, 255);
-  Serial.println("right : ");
-
-  digitalWrite( Motor_M1, HIGH);
-  digitalWrite( Motor_M2, HIGH);
-
-  analogWrite( Motor_E1, 255);
-  analogWrite( Motor_E2, 0);
-  
-}
-
-void left(byte flag, byte numOfValues)
-{
-//  analogWrite(LeftLED, 255);
-  Serial.println("left : ");
-
-  digitalWrite( Motor_M1, HIGH);
-  digitalWrite( Motor_M2, HIGH);
-
-  analogWrite( Motor_E1, 0);
-  analogWrite( Motor_E2, 255);
-  
 }
