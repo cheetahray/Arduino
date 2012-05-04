@@ -100,10 +100,16 @@ void loop()
     //Serial.println( mydata.Buffer );
     ET.sendData();
     // if there's data available, read a packet
+    if(true == whitebreak && delayy % 50 == 0)
+    {
+      delay(delayy>>1);
+      memset(mydata.Buffer,'0',30);
+      ET.sendData();
+      delay(delayy>>1);  
+    }
     memset(mydata.Buffer,0,packetlen);
     count = 0;
     whitebreak = false;
-    delay(delayy);  //?�本33，�??�為10，�??�速度?�好
   }
   else if( map( analogRead(onoffInPin) , 0, 1023, 0, 254) > action )
   {
@@ -112,10 +118,7 @@ void loop()
       if( outputVal < action)
       {
         analogWrite(motorPWM, 0);
-        for(int ii = 0; ii < 30; ii++)
-        {
-           mydata.Buffer[ii] = '0';
-        }
+        memset(mydata.Buffer,'0',30);
         //Serial.println( mydata.Buffer );
         delayy = 1000;
       }
@@ -132,10 +135,7 @@ void loop()
   else
   {
     analogWrite(motorPWM, 0);
-    for(int ii = 0; ii < 30; ii++)
-    {
-       mydata.Buffer[ii] = '0';
-    }
+    memset(mydata.Buffer,'0',30);
     //Serial.println( mydata.Buffer );
     delayy = 1000; 
   }
