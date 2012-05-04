@@ -105,29 +105,39 @@ void loop()
     whitebreak = false;
     delay(delayy);  //?�本33，�??�為10，�??�速度?�好
   }
+  else if( map( analogRead(onoffInPin) , 0, 1023, 0, 254) > action )
+  {
+      int sensorVal = analogRead(analogInPin);
+      outputVal = map(sensorVal, 0, 1023, 0, 254);
+      if( outputVal < action)
+      {
+        analogWrite(motorPWM, 0);
+        for(int ii = 0; ii < 30; ii++)
+        {
+           mydata.Buffer[ii] = '0';
+        }
+        //Serial.println( mydata.Buffer );
+        delayy = 1000;
+      }
+      else
+      {
+        for (int i=0; i < 30; i++) 
+        {
+          int sensorValue = digitalRead(i+base);
+          mydata.Buffer[raypin[i]] = sensorValue + '0';
+        }
+        delayy = 0;
+      }
+  }  
   else
   {
-    int sensorVal = analogRead(analogInPin);
-    outputVal = map(sensorVal, 0, 1023, 0, 254);
-    if( outputVal < action ) //|| ( map( analogRead(onoffInPin) , 0, 1023, 0, 254) < action ) )
+    analogWrite(motorPWM, 0);
+    for(int ii = 0; ii < 30; ii++)
     {
-      analogWrite(motorPWM, 0);
-      for(int ii = 0; ii < 30; ii++)
-      {
-         mydata.Buffer[ii] = '0';
-      }
-      //Serial.println( mydata.Buffer );
-      delayy = 1000;
+       mydata.Buffer[ii] = '0';
     }
-    else
-    {
-      for (int i=0; i < 30; i++) 
-      {
-        int sensorValue = digitalRead(i+base);
-        mydata.Buffer[raypin[i]] = sensorValue + '0';
-      }
-      delayy = 0;
-    } 
+    //Serial.println( mydata.Buffer );
+    delayy = 1000; 
   }
 }
 

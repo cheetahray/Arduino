@@ -36,9 +36,9 @@ void loop()
 
   if(ET.receiveData()) 
   {
-#ifdef DEBUG
-    Serial.println(mydata.Buffer);
-#endif
+
+    //Serial.println(mydata.Buffer);
+
     //ET.sendData();
 
     for( int i=0; i<7; i++) 
