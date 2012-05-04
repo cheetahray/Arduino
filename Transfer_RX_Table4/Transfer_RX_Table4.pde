@@ -19,7 +19,7 @@ struct RECEIVE_DATA_STRUCTURE{
 RECEIVE_DATA_STRUCTURE mydata;
 
 int shift = 2;
-int pos[3] = {6,2,11};
+int pos[3] = {6,11,2};
 int rnd[3] = {0,0,0};
 int last[3] = {0,0,0};
 boolean occupied[3] = {false, false, false};

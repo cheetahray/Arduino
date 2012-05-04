@@ -33,7 +33,15 @@ struct SEND_DATA_STRUCTURE{
 };
 SEND_DATA_STRUCTURE mydata;
 
-int   count;
+const int analogInPin = A0;
+const int motorPWM = 10;
+int dir = 9;
+
+int sensorVal = 0;
+int outputVal = 0;
+int action = 5;
+
+int count;
 int raypin[30] ={29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
                //30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10, 9, 8, 7, 6, 5, 4, 3, 2, 1
 void setup() {
@@ -43,10 +51,13 @@ void setup() {
   { 
     pinMode(i+base, INPUT);
   }
+  pinMode(dir, OUTPUT);
+  pinMode(motorPWM, OUTPUT);
   mySerial.begin(9600);
   //start the library, pass in the data details and the name of the serial port.
   ET.begin(details(mydata), &mySerial);
   Serial.begin(9600);
+  analogWrite(motorPWM, 0);
 }
 
 void loop() 
@@ -57,6 +68,12 @@ void loop()
     mydata.Buffer[count++] = Serial.read();
     delay(2);
   }
+  else if (outputVal != action) 
+  {
+      digitalWrite(dir, HIGH);
+      analogWrite(motorPWM, outputVal);
+      action = outputVal;
+  } 
   else if( mydata.Buffer[0] != 0 )
   {
     #ifdef DEBUG
@@ -66,10 +83,12 @@ void loop()
     // if there's data available, read a packet
     memset(mydata.Buffer,0,packetlen);
     count = 0;
-    //delay(10);  //原本33，後改為10，反應速度更好
+    //delay(10);  //?�本33，�??�為10，�??�速度?�好
   }
   else
   {
+    sensorVal = analogRead(analogInPin);
+    outputVal = map(sensorVal, 0, 1023, 0, 254);
     for (int i=0; i < 30; i++) 
     {
       int sensorValue = digitalRead(i+base);
