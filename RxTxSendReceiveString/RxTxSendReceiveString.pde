@@ -33,20 +33,23 @@ struct SEND_DATA_STRUCTURE{
 };
 SEND_DATA_STRUCTURE mydata;
 
-const int analogInPin = A0;
+const int analogInPin = A0, onoffInPin = A2;
 const int motorPWM = 10;
 int dir = 9;
 
-int sensorVal = 0;
-int outputVal = 0;
+int outputVal = 0, lastVal = 0;
 int action = 5;
 
-int count;
+int count, delayy;
 int raypin[30] ={29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
                //30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10, 9, 8, 7, 6, 5, 4, 3, 2, 1
+               
+boolean whitebreak;
+               
 void setup() {
   // start the Ethernet and UDP:
-  count = 0;
+  whitebreak = false;
+  count = delayy = 0;
   for (int i=0; i < 30; i++) 
   { 
     pinMode(i+base, INPUT);
@@ -57,44 +60,74 @@ void setup() {
   //start the library, pass in the data details and the name of the serial port.
   ET.begin(details(mydata), &mySerial);
   Serial.begin(9600);
-  analogWrite(motorPWM, 0);
 }
 
 void loop() 
 {
-  if (Serial.available() > 0) 
+  if (Serial.available() > 0 && false == whitebreak) 
   {
     // read the incoming byte:
-    mydata.Buffer[count++] = Serial.read();
+    mydata.Buffer[count] = Serial.read();
+    if(' ' == mydata.Buffer[count])
+    {
+      mydata.Buffer[count] = 0;
+      if(count < 10)
+      {
+         delayy = atoi(mydata.Buffer);
+         //Serial.println(delayy);
+         count = -1;
+      }
+      else
+      {
+         for(int ii = 15; ii < 30; ii++)
+         {
+           mydata.Buffer[ii] = '0';
+         }
+         whitebreak = true;
+      }
+    }
+    count++;
     delay(2);
   }
-  else if (outputVal != action) 
+  else if (outputVal != lastVal) 
   {
       digitalWrite(dir, HIGH);
       analogWrite(motorPWM, outputVal);
-      action = outputVal;
+      lastVal = outputVal;
   } 
-  else if( mydata.Buffer[0] != 0 )
+  else if( 0 != mydata.Buffer[packetlen >> 1] )
   {
-    #ifdef DEBUG
-    Serial.println( mydata.Buffer );
-    #endif
+    //Serial.println( mydata.Buffer );
     ET.sendData();
     // if there's data available, read a packet
     memset(mydata.Buffer,0,packetlen);
     count = 0;
-    //delay(10);  //?�本33，�??�為10，�??�速度?�好
+    whitebreak = false;
+    delay(delayy);  //?�本33，�??�為10，�??�速度?�好
   }
   else
   {
-    sensorVal = analogRead(analogInPin);
+    int sensorVal = analogRead(analogInPin);
     outputVal = map(sensorVal, 0, 1023, 0, 254);
-    for (int i=0; i < 30; i++) 
+    if( outputVal < action ) //|| ( map( analogRead(onoffInPin) , 0, 1023, 0, 254) < action ) )
     {
-      int sensorValue = digitalRead(i+base);
-      mydata.Buffer[raypin[i]] = sensorValue + '0';
+      analogWrite(motorPWM, 0);
+      for(int ii = 0; ii < 30; ii++)
+      {
+         mydata.Buffer[ii] = '0';
+      }
+      //Serial.println( mydata.Buffer );
+      delayy = 1000;
     }
-    mydata.Buffer[30] = 0; 
+    else
+    {
+      for (int i=0; i < 30; i++) 
+      {
+        int sensorValue = digitalRead(i+base);
+        mydata.Buffer[raypin[i]] = sensorValue + '0';
+      }
+      delayy = 0;
+    } 
   }
 }
 
