@@ -68,24 +68,25 @@ void loop()
   if (Serial.available() > 0 && false == whitebreak) 
   {
     // read the incoming byte:
-    memset(ray+count, Serial.read(), 1);
+    ray[rayidx][count] = Serial.read();
     if(' ' == ray[rayidx][count])
     {
       ray[rayidx][count] = 0;
       if(count < 10)
       {
-         delayy = atoi(ray[rayidx][count]);
+         delayy = atoi(ray[rayidx]);
          //Serial.println(delayy);
          count = -1;
       }
       else
       {
          count--;
-         if(++rayidx == 7)
-         {
-           whitebreak = true;
-         }
+         ++rayidx;
       }
+    }
+    else if(';' == ray[rayidx][count])
+    {
+       whitebreak = true;
     }
     count++;
     delay(2);
@@ -112,11 +113,14 @@ void loop()
   }
   else if (rayidx > 0)
   {
-    rayidx--
+    rayidx--;
     memcpy(mydata.Buffer, ray[7-rayidx], 15);
     memset(mydata.Buffer+15, '0', 15);
-    count = 0;
-    whitebreak = false;    
+    if(0 == rayidx)
+    {
+      whitebreak = false;
+      count = 0;
+    }    
   }
   else if( map( analogRead(onoffInPin) , 0, 1023, 0, 254) > action )
   {
