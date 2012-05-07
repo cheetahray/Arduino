@@ -89,12 +89,6 @@ void loop()
     count++;
     delay(2);
   }
-  else if (outputVal != lastVal) 
-  {
-      digitalWrite(dir, HIGH);
-      analogWrite(motorPWM, outputVal);
-      lastVal = outputVal;
-  } 
   else if( 0 != mydata.Buffer[packetlen >> 1] )
   {
     //Serial.println( mydata.Buffer );
@@ -124,6 +118,8 @@ void loop()
       }
       else
       {
+        digitalWrite(dir, HIGH);
+        analogWrite(motorPWM, outputVal);
         for (int i=0; i < 30; i++) 
         {
           int sensorValue = digitalRead(i+base);
