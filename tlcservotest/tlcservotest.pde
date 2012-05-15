@@ -295,6 +295,7 @@ void loop()
     else
       angle += 10;
     */
+    count = 0;
     Tlc.update();
     delay(500);
   }
