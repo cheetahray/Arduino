@@ -59,24 +59,45 @@ void loop()
     {
        if(++howmanytimes[i] > 6)
        {
-         howmanytimes[i] = 0;
          shoot = true;
        } 
     }
     else
+    {
       howmanytimes[i] = 0;
+    }
   }
 
   //The following lines are for printing out results of array0
-  //Serial.print("mux0array: ");
+  /*Serial.print("mux0array: ");
   for (int i=1; i<8; i++)
   {
     Serial.print(mydata.mux0array[i]);
     Serial.print("/");
   }
   Serial.println();  //line feed
+  */
+  
   if(true == shoot)
+  {
+    for (int i=1; i<8; i++)
+    {
+      if(mydata.mux0array[i] < 75)
+      {
+         if(howmanytimes[i] <= 6)
+         {
+             mydata.mux0array[i] = 90;
+         }
+         else
+         {
+             howmanytimes[i] = 0;
+         }
+      }
+    }
+    
     ET.sendData();
+  }
+
   delay(43);
 }
 
