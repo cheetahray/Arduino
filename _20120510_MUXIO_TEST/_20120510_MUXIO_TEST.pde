@@ -24,7 +24,7 @@ struct SEND_DATA_STRUCTURE{
 };
 
 SEND_DATA_STRUCTURE mydata;
-
+/*
 const int ana3 = A3;
 const int ana4 = A4;
 const int ana5 = A5;
@@ -35,7 +35,7 @@ int valA5 = 0;
 
 int choose = 1;
 int times = 90;
-
+*/
 void setup()
 {
   //Set MUX control pins to output
@@ -51,34 +51,78 @@ void setup()
 
 void loop()
 {
+  boolean shoot = false;
   if(ET.receiveData()) 
   {
     for (int i=1; i<8; i++)
     {
       Serial.print(mydata.mux0array[i]);
+      if(mydata.mux0array[i] < 75)
+      {
+         switch(i)
+         {
+           case 1:
+             for(int j=1; j<=7; j++)
+             {
+               mux1(j,20,100);
+             }
+           break;
+           case 2:
+             for(int j=8; j<=13; j++)
+             {
+               mux1(j,20,100);
+             }
+           break;
+           case 3:
+             for(int j=14; j<=15; j++)
+             {
+               mux1(j,20,100);
+             }
+             for(int j=1; j<=4; j++)
+             {
+               mux2(j,20,100);
+             }
+           break;
+           case 4:
+             for(int j=5; j<=11; j++)
+             {
+               mux2(j,20,100);
+             }
+           break;
+           case 5:
+             for(int j=12; j<=15; j++)
+             {
+               mux2(j,20,100);
+             }
+             for(int j=1; j<=2; j++)
+             {
+               mux3(j,20,100);
+             }
+           break;
+           case 6:
+             for(int j=3; j<=8; j++)
+             {
+               mux3(j,20,100);
+             }
+           break;
+           case 7:
+             for(int j=9; j<=15; j++)
+             {
+               mux3(j,20,100);
+             }
+           break;
+         }
+         shoot = true;
+      }
+      Serial.print(" ");
     }
+    Serial.println();
   }
-  /*
-  Serial.print("analog3 = ");
-  Serial.print(valA3);
-  Serial.print(" analog4 = ");
-  Serial.print(valA4);
-  Serial.print(" analog5 = ");
-  Serial.println(valA5);
-  delay(200);
-  
-  for (int i=1; i<=15; i++){
-  mux1(i,20,100);
+
+  if(true == shoot)
+  {
+    delay(2000);
   }
-  for (int i=1; i<=15; i++){
-  mux2(i,20,100);
-  }
-  for (int i=1; i<=15; i++){
-  mux3(i,20,100);
-  }
-  */
-  //delay(2000);
-  
 }
 
 void mux1(int i,int HighTime,int LowTime) { //藍色
