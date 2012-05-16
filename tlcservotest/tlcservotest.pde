@@ -299,7 +299,7 @@ void loop()
     Tlc.update();
     delay(500);
   }
-  else if (count++ > 450000)
+  else if (count++ > 600000)
   {
     for(int j=0; j<=46; j++)
     {
