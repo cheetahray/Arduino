@@ -26,7 +26,6 @@ void setup()
     delay(raydelay);     
   }
   */
-  Serial.print(myservo.read());
   pinMode(out1Pin, OUTPUT);      // sets the digital pin 13 as output
   pinMode(out2Pin, OUTPUT);      // sets the digital pin 13 as output
   pinMode(in1Pin, INPUT);      // sets the digital pin 7 as input
@@ -34,6 +33,7 @@ void setup()
   digitalWrite(out1Pin, HIGH);    // sets the LED to the button's value
   digitalWrite(out2Pin, HIGH);    // sets the LED to the button's value
   Serial.begin(9600);
+  myservo.write(pos);
 } 
  
  
@@ -56,26 +56,20 @@ void loop()
   
   if(LOW == digitalRead(in1Pin))
   {
-    Serial.println("what");
-    if(pos != 180)
-    {
-      for(pos = 0; pos < 180; pos += 1)  // goes from 0 degrees to 180 degrees 
-      {                                  // in steps of 1 degree 
-        myservo.write(pos);              // tell servo to go to position in variable 'pos' 
-        delay(raydelay);                       // waits 15ms for the servo to reach the position 
-      }
+    Serial.println("open");
+    for(pos = myservo.read(); pos < 180; pos += 1)  // goes from 0 degrees to 180 degrees 
+    {                                  // in steps of 1 degree 
+      myservo.write(pos);              // tell servo to go to position in variable 'pos' 
+      delay(raydelay);                       // waits 15ms for the servo to reach the position 
     }
   }
   else if(rayval2 == val2)
   {
-    Serial.println("F");
-    if(pos != 0)
-    {
-      for(pos = 180; pos>=1; pos-=1)     // goes from 180 degrees to 0 degrees 
-      {                                
-        myservo.write(pos);              // tell servo to go to position in variable 'pos' 
-        delay(raydelay);                       // waits 15ms for the servo to reach the position 
-      }
+    Serial.println("close");
+    for(pos = myservo.read(); pos>=1; pos-=1)     // goes from 180 degrees to 0 degrees 
+    {                                
+      myservo.write(pos);              // tell servo to go to position in variable 'pos' 
+      delay(raydelay);                       // waits 15ms for the servo to reach the position 
     }
   }
   
