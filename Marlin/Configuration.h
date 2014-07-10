@@ -135,13 +135,13 @@
 // 70 is 500C thermistor for Pico hot end
 
 #define TEMP_SENSOR_0 1
-#define TEMP_SENSOR_1 1
-#define TEMP_SENSOR_2 1
+#define TEMP_SENSOR_1 0
+#define TEMP_SENSOR_2 0
 #define TEMP_SENSOR_BED 1
 
 // This makes temp sensor 1 a redundant sensor for sensor 0. If the temperatures difference between these sensors is to high the print will be aborted.
 //#define TEMP_SENSOR_1_AS_REDUNDANT
-#define MAX_REDUNDANT_TEMP_SENSOR_DIFF 10
+//#define MAX_REDUNDANT_TEMP_SENSOR_DIFF 10
 
 // Actual temperature must be close to target for this long before M109 returns success
 #define TEMP_RESIDENCY_TIME 10  // (seconds)
@@ -162,12 +162,12 @@
 #define HEATER_0_MAXTEMP 275
 #define HEATER_1_MAXTEMP 275
 #define HEATER_2_MAXTEMP 275
-#define BED_MAXTEMP 150
+#define BED_MAXTEMP 120  // 100度目前的板子會燒
 
 // If your bed has low resistance e.g. .6 ohm and throws the fuse you can duty cycle it to reduce the
 // average current. The value should be an integer and the heat bed will be turned on for 1 interval of
 // HEATER_BED_DUTY_CYCLE_DIVIDER intervals.
-//#define HEATER_BED_DUTY_CYCLE_DIVIDER 4
+#define HEATER_BED_DUTY_CYCLE_DIVIDER 4
 
 // If you want the M105 heater power reported in watts, define the BED_WATTS, and (shared for all extruders) EXTRUDER_WATTS
 //#define EXTRUDER_WATTS (12.0*12.0/6.7) //  P=I^2/R
@@ -443,7 +443,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 
 // default settings
 
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {78.7402,78.7402,200.0*8/3,760*1.1}  // default steps per unit for Ultimaker
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {80, 80, 800, 94.31404}  // 3200 ,10.8*3.1415
 #define DEFAULT_MAX_FEEDRATE          {500, 500, 3, 25}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {9000,9000,100,10000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for Skeinforge 40+, for older versions raise them a lot.
 
@@ -487,12 +487,12 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 
 // Preheat Constants
 #define PLA_PREHEAT_HOTEND_TEMP 180
-#define PLA_PREHEAT_HPB_TEMP 70
-#define PLA_PREHEAT_FAN_SPEED 255   // Insert Value between 0 and 255
+#define PLA_PREHEAT_HPB_TEMP 50
+#define PLA_PREHEAT_FAN_SPEED 0   // Insert Value between 0 and 255
 
-#define ABS_PREHEAT_HOTEND_TEMP 240
-#define ABS_PREHEAT_HPB_TEMP 100
-#define ABS_PREHEAT_FAN_SPEED 255   // Insert Value between 0 and 255
+#define ABS_PREHEAT_HOTEND_TEMP 230
+#define ABS_PREHEAT_HPB_TEMP 50
+#define ABS_PREHEAT_FAN_SPEED 0   // Insert Value between 0 and 255
 
 //LCD and SD support
 //#define ULTRA_LCD  //general LCD support, also 16x2
