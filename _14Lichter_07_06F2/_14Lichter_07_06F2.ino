@@ -39,7 +39,7 @@ unsigned int outPinsAllTimeInterval[outPinsAllLenght];
 boolean outPinsAllState[outPinsAllLenght];
 
 
-unsigned long currentMillis = 0; //variable to hold milliseconds since start/power of arduino till when measured
+unsigned long difftime, ivaltime, currentMillis = 0; //variable to hold milliseconds since start/power of arduino till when measured
 unsigned long currentMillisLast = currentMillis; //variable to hold milliseconds since start/power of arduino till when measured
 
 
@@ -84,6 +84,10 @@ void setup() {  // put your setup code here, to run once:
     Serial.println("gracefully reached end of setup");
     Serial.println();
   }
+  
+  digitalWriteE(1, 500);
+  difftime[0] = millis();
+  ivaltime = 700;
 }
 
 
@@ -104,11 +108,17 @@ void loop() {  // put your main code here, to run repeatedly:
 
 
   //alle haendisch eingestellt:
-  digitalWriteE(1, 500);
-  delay(700); 
-  digitalWriteE(2, 500);
-  delay(700); 
-  digitalWriteE(1, 500);
+  if(currentMillis - difftime[0] > ivaltime)
+  {
+    digitalWriteE(2, 500);
+    difftime[0] = difftime[1] = currentMillis; 
+    ivaltime += 700;
+  }
+  if(currentMillis - difftime[1] > 1400)
+  {
+    digitalWriteE(1, 500);
+    difftime = currentMillis; 
+  }
   delay(700); 
   digitalWriteE(11, 125);
   delay(300); 

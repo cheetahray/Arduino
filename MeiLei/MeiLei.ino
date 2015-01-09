@@ -11,23 +11,23 @@
 //Testing the DC Motors
 //Define Pins
 //Motor A
-int enableA = 7;
-int Amin = 19;
-int Amax = 18;
-int pinA1 = 6;
-int pinA2 = 5;
+int enableA = 2;
+int pinA1 = 3;
+int pinA2 = 4;
+int Amin = 11;
+int Amax = 10;
 int Awhichway = STOP;
 unsigned long Atime;
 
 //Motor B
-int enableB = 2;
-int Bmin = 21;
-int Bmax = 20;
-int pinB1 = 4;
-int pinB2 = 3;
+int enableB = 7;
+int pinB1 = 5;
+int pinB2 = 6;
+int Bmin = 9;
+int Bmax = 8;
 int Bwhichway = STOP;
 unsigned long Btime;
-
+/*
 int enableC = 8;
 int Cmin = 16;
 int Cmax = 17;
@@ -44,7 +44,7 @@ int pinD1 = 12;
 int pinD2 = 11;
 int Dwhichway = STOP;
 unsigned long Dtime;
-
+*/
 //define time for run
 // in milliseconds
 unsigned long nowtime, difftime;
@@ -59,7 +59,7 @@ void setup() {
   pinMode (enableB, OUTPUT);
   pinMode (pinB1, OUTPUT);
   pinMode (pinB2, OUTPUT);
-
+  /*
   pinMode (enableC, OUTPUT);
   pinMode (pinC1, OUTPUT);
   pinMode (pinC2, OUTPUT);
@@ -67,7 +67,7 @@ void setup() {
   pinMode (enableD, OUTPUT);
   pinMode (pinD1, OUTPUT);
   pinMode (pinD2, OUTPUT);
-
+  */
   enableMotors();
   forward();
 
@@ -84,6 +84,7 @@ void motorBforward() {
   digitalWrite (pinB2, LOW);
   Bwhichway = FORWARD;
 }
+/*
 void motorCforward() {
   digitalWrite (pinC1, LOW);
   digitalWrite (pinC2, HIGH);
@@ -94,6 +95,7 @@ void motorDforward() {
   digitalWrite (pinD2, LOW);
   Dwhichway = FORWARD;
 }
+*/
 void motorAbackward() {
   digitalWrite (pinA1, LOW);
   digitalWrite (pinA2, HIGH);
@@ -104,6 +106,7 @@ void motorBbackward() {
   digitalWrite (pinB2, HIGH);
   Bwhichway = BACKWARD;
 }
+/*
 void motorCbackward() {
   digitalWrite (pinC1, HIGH);
   digitalWrite (pinC2, LOW);
@@ -114,6 +117,7 @@ void motorDbackward() {
   digitalWrite (pinD2, HIGH);
   Dwhichway = BACKWARD;
 }
+*/
 void motorAstop() {
   digitalWrite (pinA1, HIGH);
   digitalWrite (pinA2, HIGH);
@@ -124,6 +128,7 @@ void motorBstop() {
   digitalWrite (pinB2, HIGH);
   Bwhichway = STOP;
 }
+/*
 void motorCstop() {
   digitalWrite (pinC1, HIGH);
   digitalWrite (pinC2, HIGH);
@@ -134,6 +139,7 @@ void motorDstop() {
   digitalWrite (pinD2, HIGH);
   Dwhichway = STOP;
 }
+*/
 void motorAcoast() {
   digitalWrite (pinA1, LOW);
   digitalWrite (pinA2, LOW);
@@ -144,6 +150,7 @@ void motorBcoast() {
   digitalWrite (pinB2, LOW);
   Bwhichway = COAST;
 }
+/*
 void motorCcoast() {
   digitalWrite (pinC1, LOW);
   digitalWrite (pinC2, LOW);
@@ -154,38 +161,44 @@ void motorDcoast() {
   digitalWrite (pinD2, LOW);
   Dwhichway = COAST;
 }
+*/
 void motorAon() {
   digitalWrite (enableA, HIGH);
 }
 void motorBon() {
   digitalWrite (enableB, HIGH);
 }
+/*
 void motorCon() {
   digitalWrite (enableC, HIGH);
 }
 void motorDon() {
   digitalWrite (enableD, HIGH);
 }
+*/
 void motorAoff() {
   digitalWrite (enableA, LOW);
 }
 void motorBoff() {
   digitalWrite (enableB, LOW);
 }
+/*
 void motorCoff() {
   digitalWrite (enableC, LOW);
 }
 void motorDoff() {
   digitalWrite (enableD, LOW);
 }
-
+*/
 // Movement functions
 void forward () {
   motorAforward();
   motorBforward();
+  /*
   motorCforward();
   delay(1000);
   motorDforward();
+  */
 }
 /*
  void backward (int duration) {
@@ -218,20 +231,24 @@ void forward () {
 void disableMotors() {
   motorAoff();
   motorBoff();
+  /*
   motorCoff();
   motorDoff();
+  */
 }
 void enableMotors() {
   motorAon();
   motorBon();
+  /*
   motorCon();
   motorDon();
+  */
 }
 
 void loop() {
 
   nowtime = millis();
-  
+  /*
   difftime = nowtime - Dtime;
   if(digitalRead(Dmax) == true)
   {
@@ -317,11 +334,12 @@ void loop() {
     Ctime = nowtime;
     motorCcoast();
   }
-
+  */
+  
   difftime = nowtime - Btime;
   if(digitalRead(Bmax) == true)
   {
-    //Serial.println("Bmax");
+    Serial.println("Bmax");
     if(Bwhichway != STOP && difftime > 1000)
     {
       Btime = nowtime;
@@ -347,12 +365,14 @@ void loop() {
   }
   else if(Bwhichway == COAST && difftime > 300)
   {
-    switch(random(BACKWARD, FORWARD))
+    switch(random(BACKWARD, FORWARD+1))
     {
     case BACKWARD:
+      Serial.println("Bback");
       motorBbackward();
       break;
     case FORWARD:
+      Serial.println("Bfor");
       motorBforward();
       break;
     }  
@@ -392,12 +412,14 @@ void loop() {
   }
   else if(Awhichway == COAST && difftime > 300)
   {
-    switch(random(BACKWARD, FORWARD))
+    switch(random(BACKWARD, FORWARD+1))
     {
     case BACKWARD:
+      Serial.println("Aback");
       motorAbackward();
       break;
     case FORWARD:
+      Serial.println("Afor");
       motorAforward();
       break;
     }  
