@@ -4,6 +4,8 @@
 // wifi connection variables
 const char* ssid = "rayray";
 const char* password = "pearl123";
+const char* ssid2 = "rayray";
+const char* password2 = "pearl123";
 boolean wifiConnected = false;
 
 // UDP variables
@@ -16,15 +18,19 @@ char ReplyBuffer[] = "acknowledged"; // a string to send back
 void setup() {
   // Initialise Serial connection
   Serial.begin(115200);
-  /* You can remove the password parameter if you want the AP to be open. */
-  WiFi.softAP(ssid, password);
-
-  IPAddress myIP = WiFi.softAPIP();
-  Serial.print("AP IP address: ");
-  Serial.println(myIP);
-  
-  // Initialise wifi connection
-  wifiConnected = true; //connectWifi();
+  if (true)
+  {    
+      /* You can remove the password parameter if you want the AP to be open. */
+      WiFi.softAP(ssid, password);
+    
+      IPAddress myIP = WiFi.softAPIP();
+      Serial.print("AP IP address: ");
+      Serial.println(myIP);
+      wifiConnected = true;
+  }
+  else    
+      // Initialise wifi connection
+      wifiConnected = connectWifi();
 
   // only proceed if wifi connection successful
   if (wifiConnected) {
@@ -101,12 +107,11 @@ boolean connectUDP() {
   return state;
 }
 
-/*
 // connect to wifi – returns true if successful or false if not
 boolean connectWifi() {
   boolean state = true;
   int i = 0;
-  WiFi.begin(ssid); //, password);
+  WiFi.begin(ssid2, password2);
   Serial.println("");
   Serial.println("Connecting to WiFi");
 
@@ -134,4 +139,3 @@ boolean connectWifi() {
   }
   return state;
 }
-*/
