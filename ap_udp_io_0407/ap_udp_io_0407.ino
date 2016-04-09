@@ -5,6 +5,9 @@
 // wifi connection variables
 const char* ssid = "dac_public";
 const char* password = "dac_public";
+IPAddress ip(192, 168, 1, 103); 
+IPAddress gateway(192, 168, 1, 1);
+IPAddress subnet(255, 255, 255, 0);
 const char* ssid_AP = "rayray";
 const char* password_AP = "pearl123";
 boolean wifiConnected = false;
@@ -72,6 +75,7 @@ boolean connectUDP() {
 boolean connectWifi() {
   boolean state = true;
   int i = 0;
+  WiFi.config(ip, gateway, subnet);
   WiFi.begin(ssid, password);
   Serial.println("");
   Serial.println("Connecting to WiFi");
