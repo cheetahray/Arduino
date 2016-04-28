@@ -1,15 +1,19 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUDP.h>
 #include <EEPROM.h>
+#include <string.h>
+
+//設定機器編號 1~100
+const char* num = "0";
 
 // wifi connection variables
-const char* ssid = "dac_public";
-const char* password = "dac_public";
-IPAddress ip(192, 168, 1, 103); 
-IPAddress gateway(192, 168, 1, 1);
+const char* ssid = "bellclass";
+const char* password = "noisekitchen";
+IPAddress ip(192, 168, 13, atoi(num)); 
+IPAddress gateway(192, 168, 13, 99);
 IPAddress subnet(255, 255, 255, 0);
-const char* ssid_AP = "rayray";
-const char* password_AP = "pearl123";
+char ssid_AP[] = "bellclass_\0\0\0\0";
+char password_AP[] = "noisekitchen_\0\0\0\0";
 boolean wifiConnected = false;
 
 // UDP variables
@@ -18,6 +22,7 @@ WiFiUDP UDP;
 boolean udpConnected = false;
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; //buffer to hold incoming packet,
 
+bool ensemble =false;//合奏模式
 bool record = false;//錄音模式
 bool playSong = false;//撥放模式
 int addr, val = 0; //EEPROM
@@ -26,35 +31,46 @@ int btn1State, btn2State = 0; //按鈕狀態
 void setup() {
   Serial.begin(115200);
   ioPortSetting();//設定IO
-  btn1State = digitalRead(D0);
+  btn1State = digitalRead(D7);  
   if (btn1State == HIGH) {
+    //Serial.println("LOW");
     wifiConnected = connectWifi();
   } else {
     //AP MODE
-    Serial.println("HIGH");
+    //Serial.println("HIGH");
+    strcat (ssid_AP,num);
+    strcat (password_AP,num);
     WiFi.softAP(ssid_AP, password_AP);
     IPAddress myIP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
     Serial.println(myIP);
+    Serial.print("ssid: ");
+    Serial.println(ssid_AP);
+    Serial.print("password: ");
+    Serial.println(password_AP);
     wifiConnected = true;
   }
   
   if (wifiConnected) {
       udpConnected = connectUDP();
-      //playSong = true;
-  }    
+  }  
+  
+ 
 }
 
 void loop() {
   recieveData(); //收udp資料
-  btn2State = digitalRead(D10);
-  if (btn2State == HIGH) {
-    digitalWrite(BUILTIN_LED, LOW);
-    if (!playSong and !record) playSong = true;
-  } else {
-    digitalWrite(BUILTIN_LED, HIGH);
-  }
-  if (playSong) readMySong();
+  if (!playSong){
+    btn2State = digitalRead(RX);
+    if (btn2State == HIGH) {
+      //Serial.println(btn2State);
+      if (!playSong and !record and !ensemble) playSong = true;
+    } else {
+      //Serial.print(btn2State);
+      //Serial.print(" ");
+    }
+  }else if (playSong) readMySong();
+  //delay(10);
 }
 
 // connect to UDP – returns true if successful or false if not
@@ -106,55 +122,67 @@ boolean connectWifi() {
 }
 
 void ioPortSetting() {
-  pinMode(D0, INPUT);
-  //pinMode(D1, OUTPUT);
+  pinMode(RX, INPUT);
+  pinMode(D0, OUTPUT);
+  pinMode(D1, OUTPUT);
   pinMode(D2, OUTPUT);
   pinMode(D3, OUTPUT);
   pinMode(D4, OUTPUT);
   pinMode(D5, OUTPUT);
   pinMode(D6, OUTPUT);
-  pinMode(D7, OUTPUT);
+  pinMode(D7, INPUT);
   pinMode(D8, OUTPUT);
-  pinMode(D9, OUTPUT);
-  pinMode(D10, INPUT);
 }
 
 //接收UDP資料
 void recieveData() {
   if (wifiConnected) {
     if (udpConnected) {
+
       // if there’s data available, read a packet
       int packetSize = UDP.parsePacket();
+
       if (packetSize)
       {
         //Serial.print("Received packet of size ");
-        //Serial.println(packetSize);
-        
+        //Serial.println(packetSize);        
         // read the packet into packetBufffer
         UDP.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
-        //Serial.println(packetBuffer);
-        char str = packetBuffer[0];
-        switch (str)
-        {
-          case 'R':
-            if (!record) recordStart();
+     
+        String str;
+        for (int i = 0; i < packetSize; i++){
+          str+= packetBuffer[i];
+        }
+        //Serial.println(str);
+        
+        if( str=="249 3"){
+          if (!ensemble){
+              if (record) recordEnd();
+              ensemble = true;
+              Serial.println("Announce Start!");
+            }            
+        }else if ( str=="249 2"){
+           if (ensemble){
+              ensemble = false;
+              Serial.println("Announce End!");
+            }            
+        }else if ( str=="R"){//錄音模式
+            if (!ensemble and !record) recordStart();
             //Serial.println(packetBuffer);
-            break;
-          case 'Q':
-            if (record) recordEnd();
+        }else if ( str=="Q"){//結束錄音
+           if (record) recordEnd();
             //Serial.println(packetBuffer);
-            break;
-          default:
+        }else{
             int value = atoi(packetBuffer);
             if (record)  writeData(value);
             if (!playSong) playNote(value);
             //Serial.print("value:");
             //Serial.println(value);
-            for (int gg = 0; gg < UDP_TX_PACKET_MAX_SIZE; gg++)
-            {
-              packetBuffer[gg] = 0;
-            }
-            break;
+        }
+
+        for (int gg = 0; gg < UDP_TX_PACKET_MAX_SIZE; gg++)
+        {
+          packetBuffer[gg] = 0;
         }
       }
     }
@@ -219,21 +247,21 @@ void playMySong(int value) {
   } else { //等待
     int waittime;
     if (value >= 111) {
-      waittime = 7000 + (value - 109) * 100 ;
+      waittime = 7000 + (value - 111) * 100 ;
     } else if (value >= 95) {
-      waittime = 6000 + (value - 94) * 100 ;
+      waittime = 6000 + (value - 95) * 100 ;
     } else if (value >= 79) {
-      waittime = 5000 + (value - 78) * 100 ;
+      waittime = 5000 + (value - 79) * 100 ;
     } else if (value >= 63) {
       waittime = 4000 + (value - 63) * 100 ;
     } else if (value >= 47) {
-      waittime = 3000 + (value - 46) * 100 ;
+      waittime = 3000 + (value - 47) * 100 ;
     } else if (value >= 31) {
       waittime = 2000 + (value - 31) * 100 ;
     } else if (value >= 15) {
       waittime = 1000 + (value - 15) * 100 ;
     } else {
-      waittime = (value+1) * 100 ;
+      waittime = value * 100 ;
     }
     Serial.print(addr);
     Serial.print("\t");
@@ -251,36 +279,36 @@ void playNote(int value) {
   char pin;
   switch (a) {
     case 0:
-      pin=D2;
+      pin=D0;
       Serial.print("DO ");
       break;
     case 16:
-      pin=D3;
+      pin=D1;
       Serial.print("RE ");
       break;
     case 32:
-      pin=D4;
+      pin=D2;
       Serial.print("ME ");
       break;
     case 48:
-      pin=D5;
+      pin=D3;
       Serial.print("FA ");
       break;
     case 64:
-      pin=D6;
+      pin=D4;
       Serial.print("SO ");
       break;
     case 80:
-      pin=D7;
+      pin=D5;
       Serial.print("LA ");
       break;
     case 96:
-      pin=D8;
+      pin=D6;
       Serial.print("SI ");
       break;
     case 112:
-      pin=D9;
-      Serial.print("DO2");
+      pin=D8;
+      Serial.print("DO2 ");
       break;
   }
   DigitalOut(pin);
@@ -288,6 +316,6 @@ void playNote(int value) {
 
 void DigitalOut(char notePin) {
   digitalWrite(notePin, HIGH);
-  delay(10);
+  delay(100);
   digitalWrite(notePin, LOW);
 }
