@@ -4,13 +4,13 @@
 #include <string.h>
 
 //設定機器編號 1~100
-const char* num = "0";
+const char* num = "200";
 
 // wifi connection variables
 const char* ssid = "bellclass";
 const char* password = "noisekitchen";
 IPAddress ip(192, 168, 13, atoi(num)); 
-IPAddress gateway(192, 168, 13, 99);
+IPAddress gateway(192, 168, 13, 254);
 IPAddress subnet(255, 255, 255, 0);
 char ssid_AP[] = "bellclass_\0\0\0\0";
 char password_AP[] = "noisekitchen_\0\0\0\0";
@@ -204,6 +204,7 @@ void recordStart() {
   record = true;
   playSong = false;
   addr=val=0;
+  writeData(0);
 }
 //結束錄譜
 void recordEnd() {
@@ -276,46 +277,48 @@ void playMySong(int value) {
 
 void playNote(int value) {
   int a = value - 127;
-  char pin;
-  switch (a) {
-    case 0:
-      pin=D0;
-      Serial.print("DO ");
-      break;
-    case 16:
-      pin=D1;
-      Serial.print("RE ");
-      break;
-    case 32:
-      pin=D2;
-      Serial.print("ME ");
-      break;
-    case 48:
-      pin=D3;
-      Serial.print("FA ");
-      break;
-    case 64:
-      pin=D4;
-      Serial.print("SO ");
-      break;
-    case 80:
-      pin=D5;
-      Serial.print("LA ");
-      break;
-    case 96:
-      pin=D6;
-      Serial.print("SI ");
-      break;
-    case 112:
-      pin=D8;
-      Serial.print("DO2 ");
-      break;
+  if(a>=0){
+    char pin;
+    switch (a) {
+      case 0:
+        pin=D0;
+        Serial.print("DO ");
+        break;
+      case 16:
+        pin=D1;
+        Serial.print("RE ");
+        break;
+      case 32:
+        pin=D2;
+        Serial.print("ME ");
+        break;
+      case 48:
+        pin=D3;
+        Serial.print("FA ");
+        break;
+      case 64:
+        pin=D4;
+        Serial.print("SO ");
+        break;
+      case 80:
+        pin=D5;
+        Serial.print("LA ");
+        break;
+      case 96:
+        pin=D6;
+        Serial.print("SI ");
+        break;
+      case 112:
+        pin=D8;
+        Serial.print("DO2 ");
+        break;
+    }
+    DigitalOut(pin);
   }
-  DigitalOut(pin);
 }
 
 void DigitalOut(char notePin) {
   digitalWrite(notePin, HIGH);
-  delay(100);
+  delay(20);
   digitalWrite(notePin, LOW);
 }
