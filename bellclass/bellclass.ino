@@ -2,18 +2,22 @@
 #include <WiFiUDP.h>
 #include <EEPROM.h>
 #include <string.h>
+//#include <WiFiClient.h> 
+#include <ESP8266WebServer.h>
+
+ESP8266WebServer server(80);
 
 //設定機器編號 1~100
 const char* num = "200";
 
 // wifi connection variables
-const char* ssid = "bellclass";
-const char* password = "noisekitchen";
+char* ssid = "bellclass\0\0\0\0\0\0\0\0\0\0\0";
+char* password = "noisekitchen\0\0\0\0\0\0\0\0";
 IPAddress ip(192, 168, 13, atoi(num)); 
 IPAddress gateway(192, 168, 13, 254);
 IPAddress subnet(255, 255, 255, 0);
-char ssid_AP[] = "bellclass_\0\0\0\0";
-char password_AP[] = "noisekitchen_\0\0\0\0";
+char ssid_AP[] = "bellclass_\0\0\0\0\0\0\0\0\0\0";
+char password_AP[] = "noisekitchen_\0\0\0\0\0\0\0";
 boolean wifiConnected = false;
 
 // UDP variables
@@ -28,12 +32,61 @@ bool playSong = false;//撥放模式
 int addr, val = 0; //EEPROM
 int btn1State, btn2State = 0; //按鈕狀態
 
+void handleRoot() {
+  char temp[1000];
+  snprintf ( temp, 1000,
+            "<html> \
+            <head> \
+            <meta http-equiv='Content-Type' content='text/html; charset=utf-8' /> \
+            <title>wifi</title> \
+            </head> \
+            <body> \
+            <form name='form1' method='post' action='http://192.168.4.1/set'> \
+              <p> \
+                <label for='wifi'>Wifi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label> \
+                <input type='text' name='wifi' id='wifi'> \
+              </p> \
+              <p> \
+                <label for='passwd'>Passwd</label> \
+                <input type='text' name='passwd' id='passwd'> \
+              </p> \
+              <p> \
+                <input type='submit' name='send' id='send' value='Set'> \
+              </p> \
+            </form> \
+            </body> \
+            </html> \
+            ");
+  server.send(200, "text/html", temp);
+}
+
+void SaveWifi() {
+  
+  //message += "URI: ";
+  //message += server.uri();
+  //message += "\nMethod: ";
+  //message += ( server.method() == HTTP_GET ) ? "GET" : "POST";
+  //message += "\nArguments: ";
+  //message += server.args();
+  //message += "\n";
+
+  //for ( uint8_t i = 0; i < server.args(); i++ ) {
+    //message += " " + server.argName ( i ) + ": " + server.arg ( i ) + "\n";
+  //}
+  strncpy(ssid, server.arg (0).c_str(), 20);
+  strncpy(password, server.arg (1).c_str(), 20);
+
+  //把 ssid, password 存進 EPPROM
+  
+  server.send ( 200, "text/plain", "Set Wifi already." );
+}
+
 void setup() {
   Serial.begin(115200);
   ioPortSetting();//設定IO
   btn1State = digitalRead(D7);  
   if (btn1State == HIGH) {
-    //Serial.println("LOW");
+    //必須把 EEPROM 寫進變數 ssid, password
     wifiConnected = connectWifi();
   } else {
     //AP MODE
@@ -48,7 +101,10 @@ void setup() {
     Serial.println(ssid_AP);
     Serial.print("password: ");
     Serial.println(password_AP);
-    wifiConnected = true;
+    server.on("/", handleRoot);
+    server.on("/set", SaveWifi);
+    server.begin();
+    Serial.println("HTTP server started");
   }
   
   if (wifiConnected) {
@@ -59,18 +115,22 @@ void setup() {
 }
 
 void loop() {
-  recieveData(); //收udp資料
-  if (!playSong){
-    btn2State = digitalRead(RX);
-    if (btn2State == HIGH) {
-      //Serial.println(btn2State);
-      if (!playSong and !record and !ensemble) playSong = true;
-    } else {
-      //Serial.print(btn2State);
-      //Serial.print(" ");
-    }
-  }else if (playSong) readMySong();
-  //delay(10);
+  if (wifiConnected) {
+    recieveData(); //收udp資料
+    if (!playSong){
+      btn2State = digitalRead(RX);
+      if (btn2State == HIGH) {
+        //Serial.println(btn2State);
+        if (!playSong and !record and !ensemble) playSong = true;
+      } else {
+        //Serial.print(btn2State);
+        //Serial.print(" ");
+      }
+    }else if (playSong) readMySong();
+    //delay(10);
+  }
+  else
+    server.handleClient();
 }
 
 // connect to UDP – returns true if successful or false if not
