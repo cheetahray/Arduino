@@ -115,16 +115,18 @@ void setup() {
     Serial.println(ssid_AP);
     Serial.print("password: ");
     Serial.println(password_AP);
-    server.on("/", handleRoot);
-    server.on("/set", SaveWifi);
-    server.begin();
     Serial.println("HTTP server started");
   }
   
   if (wifiConnected) {
       udpConnected = connectUDP();
-  }  
-  
+  }
+  else
+  {
+     server.on("/", handleRoot);
+     server.on("/set", SaveWifi);
+     server.begin();
+  }
  
 }
 
