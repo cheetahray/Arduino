@@ -104,7 +104,6 @@ void setup() {
   wifiConnected = connectWifi();
   if (btn1State == LOW) {
     //AP MODE
-    //Serial.println("HIGH");
     strcat (ssid_AP,num);
     strcat (password_AP,num);
     WiFi.softAP(ssid_AP, password_AP);
@@ -121,13 +120,10 @@ void setup() {
   if (wifiConnected) {
       udpConnected = connectUDP();
   }
-  else
-  {
-     server.on("/", handleRoot);
-     server.on("/set", SaveWifi);
-     server.begin();
-  }
- 
+  
+  server.on("/", handleRoot);
+  server.on("/set", SaveWifi);
+  server.begin();
 }
 
 void loop() {
@@ -143,10 +139,9 @@ void loop() {
         //Serial.print(" ");
       }
     }else if (playSong) readMySong();
-    //delay(10);
+    //delay(10);     
   }
-  else
-    server.handleClient();
+  server.handleClient();
 }
 
 // connect to UDP – returns true if successful or false if not
@@ -434,3 +429,4 @@ void DigitalOut(char notePin) {
   delay(20);
   digitalWrite(notePin, LOW);
 }
+
