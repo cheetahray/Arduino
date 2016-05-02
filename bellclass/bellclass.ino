@@ -99,11 +99,10 @@ void setup() {
   Serial.begin(115200);
   ioPortSetting();//設定IO
   btn1State = digitalRead(D7);  
-  if (btn1State == HIGH) {
-    //必須把 EEPROM 寫進變數 ssid, password
-    readssid(480,16);
-    wifiConnected = connectWifi();
-  } else {
+  //必須把 EEPROM 寫進變數 ssid, password
+  readssid(480,16);
+  wifiConnected = connectWifi();
+  if (btn1State == LOW) {
     //AP MODE
     //Serial.println("HIGH");
     strcat (ssid_AP,num);
