@@ -11,13 +11,13 @@ ESP8266WebServer server(80);
 const char* num = "200";
 
 // wifi connection variables
-char* ssid = "bellclass\0\0\0\0\0\0\0\0\0\0\0";
-char* password = "noisekitchen\0\0\0\0\0\0\0\0";
+char* ssid = "bellclass\0\0\0\0\0\0\0";
+char* password = "noisekitchen\0\0\0\0";
 IPAddress ip(192, 168, 13, atoi(num)); 
 IPAddress gateway(192, 168, 13, 254);
 IPAddress subnet(255, 255, 255, 0);
-char ssid_AP[] = "bellclass_\0\0\0\0\0\0\0\0\0\0";
-char password_AP[] = "noisekitchen_\0\0\0\0\0\0\0";
+char ssid_AP[] = "bellclass_\0\0\0\0\0\0";
+char password_AP[] = "noisekitchen_\0\0\0";
 boolean wifiConnected = false;
 
 // UDP variables
@@ -33,30 +33,27 @@ int addr, val = 0; //EEPROM
 int btn1State, btn2State = 0; //按鈕狀態
 
 void handleRoot() {
-  char temp[1000];
-  snprintf ( temp, 1000,
-            "<html> \
-            <head> \
-            <meta http-equiv='Content-Type' content='text/html; charset=utf-8' /> \
-            <title>wifi</title> \
-            </head> \
-            <body> \
-            <form name='form1' method='post' action='http://192.168.4.1/set'> \
-              <p> \
-                <label for='wifi'>Wifi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label> \
-                <input type='text' name='wifi' id='wifi'> \
-              </p> \
-              <p> \
-                <label for='passwd'>Passwd</label> \
-                <input type='text' name='passwd' id='passwd'> \
-              </p> \
-              <p> \
-                <input type='submit' name='send' id='send' value='Set'> \
-              </p> \
-            </form> \
-            </body> \
-            </html> \
-            ");
+  char temp[] = "<html> \
+<head> \
+<meta http-equiv='Content-Type' content='text/html; charset=utf-8' /> \
+<title>wifi</title> \
+</head> \
+<body bgcolor='#666666' text='#FFFFFF'> \
+<form name='form1' method='post' action='http://192.168.4.1/set'> \
+<p> \
+<label for='wifi'>Wifi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label> \
+<input type='text' name='wifi' id='wifi'> \
+</p> \
+<p> \
+<label for='passwd'>Passwd</label> \
+<input type='text' name='passwd' id='passwd'> \
+</p> \
+<p> \
+<input type='submit' style='font-weight: bold; color: #FFF; background-color: #79B53D; border:1px ridge' name='send' id='send' value='Set'> \
+</p> \
+</form> \
+</body> \
+</html>";
   server.send(200, "text/html", temp);
 }
 
@@ -73,12 +70,29 @@ void SaveWifi() {
   //for ( uint8_t i = 0; i < server.args(); i++ ) {
     //message += " " + server.argName ( i ) + ": " + server.arg ( i ) + "\n";
   //}
-  strncpy(ssid, server.arg (0).c_str(), 20);
-  strncpy(password, server.arg (1).c_str(), 20);
-
-  //把 ssid, password 存進 EPPROM
   
-  server.send ( 200, "text/plain", "Set Wifi already." );
+  for (int gg = 0; gg < 16; gg++)
+  {
+    *(ssid+gg) = 0;
+    *(password+gg) = 0;
+  }
+  
+  strncpy(ssid, server.arg (0).c_str(), 16);
+  strncpy(password, server.arg (1).c_str(), 16);
+  
+  writessid(480,16);
+  
+  server.send ( 200, "text/html", "<html> \
+<head> \
+<meta http-equiv='Content-Type' content='text/html; charset=utf-8' /> \
+<title>wifi</title> \
+</head> \
+<body bgcolor='#666666' text='#FFFFFF'> \
+<p>Set Wifi already.</p> \
+</body> \
+</html> \
+" );
+
 }
 
 void setup() {
@@ -87,6 +101,7 @@ void setup() {
   btn1State = digitalRead(D7);  
   if (btn1State == HIGH) {
     //必須把 EEPROM 寫進變數 ssid, password
+    readssid(480,16);
     wifiConnected = connectWifi();
   } else {
     //AP MODE
@@ -151,7 +166,12 @@ boolean connectUDP() {
 boolean connectWifi() {
   boolean state = true;
   int i = 0;
-  WiFi.config(ip, gateway, subnet);
+  //判斷是否為 bellclass
+  if( strcmp(ssid,"bellclass") == 0 )
+  {
+      WiFi.config(ip, gateway, subnet);
+      Serial.println(ip);
+  }
   WiFi.begin(ssid, password);
   Serial.println("");
   Serial.println("Connecting to WiFi");
@@ -254,7 +274,7 @@ void writeData(int val) {
   EEPROM.write(addr, val);
   addr = addr + 1;
   //強制結束錄譜
-  if (addr == 511) recordEnd();
+  if (addr == 479) recordEnd();
 }
 //開始錄譜
 void recordStart() {
@@ -275,6 +295,37 @@ void recordEnd() {
   val = 0;
   Serial.println("");
   Serial.println("Recording Stop");
+}
+
+void readssid(int sAddr, int len){
+    EEPROM.begin(512);
+    for (int gg=0; gg < len; gg++)
+    {
+        val = EEPROM.read(sAddr);
+        sAddr++;
+        *(ssid+gg) = val;
+    }
+    for (int gg=0; gg < len; gg++)
+    {
+        val = EEPROM.read(sAddr);
+        sAddr++;
+        *(password+gg) = val;
+    }
+    Serial.println(ssid);
+    Serial.println(password);         
+}
+
+void writessid(int sAddr, int len){
+    EEPROM.begin(512);
+    for (int gg=0; gg < len; gg++)
+        EEPROM.write( sAddr+gg, *(ssid+gg) );
+    
+    sAddr += 16;
+    for (int gg=0; gg < len; gg++)
+        EEPROM.write( sAddr+gg, *(password+gg) );
+    
+    EEPROM.commit(); 
+
 }
 
 //讀取樂譜資料
