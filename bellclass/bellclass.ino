@@ -2,18 +2,18 @@
 #include <WiFiUDP.h>
 #include <EEPROM.h>
 #include <string.h>
-//#include <WiFiClient.h> 
 #include <ESP8266WebServer.h>
 
-ESP8266WebServer server(80);
-
-//Ë®≠ÂÆöÊ©üÂô®Á∑®Ëôü 1~100
+//≥]©wæ˜æπΩs∏π 1~100
 const char* num = "200";
+//≥]©w√˛ßO
+char type[] = "bell";
 
+ESP8266WebServer server(80);
 // wifi connection variables
 char* ssid = "bellclass\0\0\0\0\0\0\0";
 char* password = "noisekitchen\0\0\0\0";
-IPAddress ip(192, 168, 13, atoi(num)); 
+IPAddress ip(192, 168, 13, atoi(num));
 IPAddress gateway(192, 168, 13, 254);
 IPAddress subnet(255, 255, 255, 0);
 char ssid_AP[] = "bellclass_\0\0\0\0\0\0";
@@ -26,14 +26,75 @@ WiFiUDP UDP;
 boolean udpConnected = false;
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; //buffer to hold incoming packet,
 
-bool ensemble =false;//ÂêàÂ•èÊ®°Âºè
-bool record = false;//ÈåÑÈü≥Ê®°Âºè
-bool playSong = false;//Êí•ÊîæÊ®°Âºè
+bool ensemble = false; //¶X´µº“¶°
+bool record = false; //ø˝≠µº“¶°
+bool playSong = false; //º∑©Òº“¶°
 int addr, val = 0; //EEPROM
-int btn1State, btn2State = 0; //ÊåâÈàïÁãÄÊÖã
+int btn1State, btn2State = 0; //´ˆ∂s™¨∫A
+
+void setup() {
+	Serial.begin(115200);
+	ioPortSetting(); //≥]©wIO
+	btn1State = digitalRead(D7);
+	WiFi.disconnect();
+	WiFi.softAPdisconnect();
+	//AP MODE
+	WiFi.mode(WIFI_AP_STA);
+	strcat(ssid_AP, num);
+	strcat(password_AP, num);
+	WiFi.softAP(ssid_AP, password_AP);
+	IPAddress myIP = WiFi.softAPIP();
+	Serial.print("AP IP address: ");
+	Serial.println(myIP);
+	Serial.print("ssid: ");
+	Serial.println(ssid_AP);
+	Serial.print("password: ");
+	Serial.println(password_AP);
+	Serial.println("HTTP server started");
+	if (btn1State == HIGH) {
+		//WIFI MODE
+		//ssid = "bellclass\0\0\0\0\0\0\0";
+		//password = "noisekitchen\0\0\0\0";
+		readssid(480, 16);
+		wifiConnected = connectWifi();
+	} else {
+		//AP MODE
+		WiFi.mode(WIFI_AP);
+		wifiConnected = true;
+	}
+
+	if (wifiConnected) {
+		udpConnected = connectUDP();
+	}
+
+	server.on("/", handleRoot);
+	server.on("/set", SaveWifi);
+	server.begin();
+}
+
+void loop() {
+	if (wifiConnected) {
+		recieveData(); //¶¨udp∏ÍÆ∆
+		if (!playSong) {
+			btn2State = digitalRead(RX);
+			if (btn2State == HIGH) {
+				//Serial.println(btn2State);
+				if (!playSong and !record and !ensemble)
+					playSong = true;
+			} else {
+				//Serial.print(btn2State);
+				//Serial.print(" ");
+			}
+		} else if (playSong)
+			readMySong();
+		//delay(10);
+	}
+	server.handleClient();
+}
 
 void handleRoot() {
-  char temp[] = "<html> \
+	char temp[] =
+			"<html> \
 <head> \
 <meta http-equiv='Content-Type' content='text/html; charset=utf-8' /> \
 <title>wifi</title> \
@@ -41,392 +102,337 @@ void handleRoot() {
 <body bgcolor='#666666' text='#FFFFFF'> \
 <form name='form1' method='post' action='http://192.168.4.1/set'> \
 <p> \
-<label for='wifi'>Wifi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label> \
-<input type='text' name='wifi' id='wifi'> \
+<label for='wifi' style='font-size:28px'>Wifi&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label> \
+<input type='text' name='wifi' id='wifi'  maxlength='16'> \
 </p> \
 <p> \
-<label for='passwd'>Passwd</label> \
-<input type='text' name='passwd' id='passwd'> \
+<label for='passwd'  style='font-size:28px'>Password&nbsp;&nbsp;</label> \
+<input type='text' name='passwd' id='passwd' maxlength='16'> \
 </p> \
-<p> \
-<input type='submit' style='font-weight: bold; color: #FFF; background-color: #79B53D; border:1px ridge' name='send' id='send' value='Set'> \
+<p style='margin-top:25px'> \
+<input type='submit' style='font-weight: bold;font-size:24px; color: #FFF; background-color: #79B53D; border:5px ridge' name='send' id='send' value='Set'> \
 </p> \
 </form> \
 </body> \
 </html>";
-  server.send(200, "text/html", temp);
+	server.send(200, "text/html", temp);
 }
 
 void SaveWifi() {
-  
-  //message += "URI: ";
-  //message += server.uri();
-  //message += "\nMethod: ";
-  //message += ( server.method() == HTTP_GET ) ? "GET" : "POST";
-  //message += "\nArguments: ";
-  //message += server.args();
-  //message += "\n";
 
-  //for ( uint8_t i = 0; i < server.args(); i++ ) {
-    //message += " " + server.argName ( i ) + ": " + server.arg ( i ) + "\n";
-  //}
-  
-  for (int gg = 0; gg < 16; gg++)
-  {
-    *(ssid+gg) = 0;
-    *(password+gg) = 0;
-  }
-  
-  strncpy(ssid, server.arg (0).c_str(), 16);
-  strncpy(password, server.arg (1).c_str(), 16);
-  
-  writessid(480,16);
-  
-  server.send ( 200, "text/html", "<html> \
+	for (int gg = 0; gg < 16; gg++) {
+		*(ssid + gg) = 0;
+		*(password + gg) = 0;
+	}
+
+	strncpy(ssid, server.arg(0).c_str(), 16);
+	strncpy(password, server.arg(1).c_str(), 16);
+
+	writessid(480, 16);
+
+	server.send(200, "text/html",
+			"<html> \
 <head> \
 <meta http-equiv='Content-Type' content='text/html; charset=utf-8' /> \
 <title>wifi</title> \
 </head> \
 <body bgcolor='#666666' text='#FFFFFF'> \
-<p>Set Wifi already.</p> \
+<p style='font-size:28px'>Set Wifi already.</p> \
 </body> \
 </html> \
-" );
+");
 
 }
 
-void setup() {
-  Serial.begin(115200);
-  ioPortSetting();//Ë®≠ÂÆöIO
-  btn1State = digitalRead(D7);  
-  //ÂøÖÈ†àÊää EEPROM ÂØ´ÈÄ≤ËÆäÊï∏ ssid, password
-  readssid(480,16);
-  wifiConnected = connectWifi();
-  if (btn1State == LOW) {
-    //AP MODE
-    strcat (ssid_AP,num);
-    strcat (password_AP,num);
-    WiFi.softAP(ssid_AP, password_AP);
-    IPAddress myIP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(myIP);
-    Serial.print("ssid: ");
-    Serial.println(ssid_AP);
-    Serial.print("password: ");
-    Serial.println(password_AP);
-    Serial.println("HTTP server started");
-  }
-  
-  if (wifiConnected) {
-      udpConnected = connectUDP();
-  }
-  
-  server.on("/", handleRoot);
-  server.on("/set", SaveWifi);
-  server.begin();
-}
-
-void loop() {
-  if (wifiConnected) {
-    recieveData(); //Êî∂udpË≥áÊñô
-    if (!playSong){
-      btn2State = digitalRead(RX);
-      if (btn2State == HIGH) {
-        //Serial.println(btn2State);
-        if (!playSong and !record and !ensemble) playSong = true;
-      } else {
-        //Serial.print(btn2State);
-        //Serial.print(" ");
-      }
-    }else if (playSong) readMySong();
-    //delay(10);     
-  }
-  server.handleClient();
-}
-
-// connect to UDP ‚Äì returns true if successful or false if not
+// connect to UDP °V returns true if successful or false if not
 boolean connectUDP() {
-  boolean state = false;
-  Serial.println("");
-  Serial.println("Connecting to UDP");
+	boolean state = false;
+	Serial.println("");
+	Serial.println("Connecting to UDP");
 
-  if (UDP.begin(localPort) == 1) {
-    Serial.println("Connection successful");
-    state = true;
-  } else {
-    Serial.println("Connection failed");
-  }
-  return state;
+	if (UDP.begin(localPort) == 1) {
+		Serial.println("Connection successful");
+		state = true;
+	} else {
+		Serial.println("Connection failed");
+	}
+	return state;
 }
-// connect to wifi ‚Äì returns true if successful or false if not
+// connect to wifi °V returns true if successful or false if not
 boolean connectWifi() {
-  boolean state = true;
-  int i = 0;
-  //Âà§Êñ∑ÊòØÂê¶ÁÇ∫ bellclass
-  if( strcmp(ssid,"bellclass") == 0 )
-  {
-      WiFi.config(ip, gateway, subnet);
-      Serial.println(ip);
-  }
-  WiFi.begin(ssid, password);
-  Serial.println("");
-  Serial.println("Connecting to WiFi");
+	boolean state = true;
+	int i = 0;
+	//ßP¬_¨Oß_¨∞ bellclass
+	if (strcmp(ssid, "bellclass") == 0) {
+		WiFi.config(ip, gateway, subnet);
+		//Serial.println(ip);
+	}
+	WiFi.begin(ssid, password);
+	Serial.println("");
+	Serial.println("Connecting to WiFi");
 
-  // Wait for connection
-  Serial.print("Connecting");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-    if (i > 10) {
-      state = false;
-      break;
-    }
-    i++;
-  }
-  if (state) {
-    Serial.println("");
-    Serial.print("Connected to ");
-    Serial.println(ssid);
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
-  }
-  else {
-    Serial.println("");
-    Serial.println("Connection failed.");
-  }
-  return state;
+	// Wait for connection
+	Serial.print("Connecting");
+	while (WiFi.status() != WL_CONNECTED) {
+		WiFi.mode(WIFI_STA);
+		WiFi.begin(ssid, password);
+		delay(500);
+		Serial.print(".");
+		if (i > 20) {
+			state = false;
+			break;
+		}
+		i++;
+	}
+	if (state) {
+		Serial.println("");
+		Serial.print("Connected to ");
+		Serial.println(ssid);
+		Serial.print("IP address: ");
+		Serial.println(WiFi.localIP());
+	} else {
+		Serial.println("");
+		Serial.println("Connection failed.");
+	}
+	return state;
 }
 
 void ioPortSetting() {
-  pinMode(RX, INPUT);
-  pinMode(D0, OUTPUT);
-  pinMode(D1, OUTPUT);
-  pinMode(D2, OUTPUT);
-  pinMode(D3, OUTPUT);
-  pinMode(D4, OUTPUT);
-  pinMode(D5, OUTPUT);
-  pinMode(D6, OUTPUT);
-  pinMode(D7, INPUT);
-  pinMode(D8, OUTPUT);
+	pinMode(RX, INPUT);
+	pinMode(D0, OUTPUT);
+	pinMode(D1, OUTPUT);
+	pinMode(D2, OUTPUT);
+	pinMode(D3, OUTPUT);
+	pinMode(D4, OUTPUT);
+	pinMode(D5, OUTPUT);
+	pinMode(D6, OUTPUT);
+	pinMode(D7, INPUT);
+	pinMode(D8, OUTPUT);
 }
 
-//Êé•Êî∂UDPË≥áÊñô
+//±µ¶¨UDP∏ÍÆ∆
 void recieveData() {
-  if (wifiConnected) {
-    if (udpConnected) {
+	if (wifiConnected) {
+		if (udpConnected) {
 
-      // if there‚Äôs data available, read a packet
-      int packetSize = UDP.parsePacket();
+			// if there°¶s data available, read a packet
+			int packetSize = UDP.parsePacket();
 
-      if (packetSize)
-      {
-        //Serial.print("Received packet of size ");
-        //Serial.println(packetSize);        
-        // read the packet into packetBufffer
-        UDP.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
-     
-        String str;
-        for (int i = 0; i < packetSize; i++){
-          str+= packetBuffer[i];
-        }
-        //Serial.println(str);
-        
-        if( str=="249 3"){
-          if (!ensemble){
-              if (record) recordEnd();
-              ensemble = true;
-              Serial.println("Announce Start!");
-            }            
-        }else if ( str=="249 2"){
-           if (ensemble){
-              ensemble = false;
-              Serial.println("Announce End!");
-            }            
-        }else if ( str=="R"){//ÈåÑÈü≥Ê®°Âºè
-            if (!ensemble and !record) recordStart();
-            //Serial.println(packetBuffer);
-        }else if ( str=="Q"){//ÁµêÊùüÈåÑÈü≥
-           if (record) recordEnd();
-            //Serial.println(packetBuffer);
-        }else{
-            int value = atoi(packetBuffer);
-            if (record)  writeData(value);
-            if (!playSong) playNote(value);
-            //Serial.print("value:");
-            //Serial.println(value);
-        }
+			if (packetSize) {
+				//Serial.print("Received packet of size ");
+				//Serial.println(packetSize);
+				// read the packet into packetBufffer
+				UDP.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
 
-        for (int gg = 0; gg < UDP_TX_PACKET_MAX_SIZE; gg++)
-        {
-          packetBuffer[gg] = 0;
-        }
-      }
-    }
-  }
+				String str;
+				for (int i = 0; i < packetSize; i++) {
+					str += packetBuffer[i];
+				}
+				//Serial.println(str);
+
+				if (str == "249 3") {
+					if (!ensemble) {
+						if (record)
+							recordEnd();
+						ensemble = true;
+						Serial.println("Announce Start!");
+					}
+				} else if (str == "249 2") {
+					if (ensemble) {
+						ensemble = false;
+						Serial.println("Announce End!");
+					}
+				} else if (str == "R") {        //ø˝≠µº“¶°
+					if (!ensemble and !record)
+						recordStart();
+					//Serial.println(packetBuffer);
+				} else if (str == "Q") {        //µ≤ßÙø˝≠µ
+					if (record)
+						recordEnd();
+					//Serial.println(packetBuffer);
+				} else if (str == "WHO") {
+					//Serial.println("WHO");
+					UDP.beginPacket(UDP.remoteIP(), localPort);
+					UDP.write(type);
+					UDP.endPacket();
+				} else {
+					int value = atoi(packetBuffer);
+					if (record)
+						writeData(value);
+					if (!playSong)
+						playNote(value);
+					//Serial.print("value:");
+					//Serial.println(value);
+				}
+
+				for (int gg = 0; gg < UDP_TX_PACKET_MAX_SIZE; gg++) {
+					packetBuffer[gg] = 0;
+				}
+			}
+		}
+	}
 }
 
-//ÂØ´ÂÖ•EEPROM
+//±Nº÷√–ºg§JEEPROM
 void writeData(int val) {
-  EEPROM.write(addr, val);
-  addr = addr + 1;
-  //Âº∑Âà∂ÁµêÊùüÈåÑË≠ú
-  if (addr == 479) recordEnd();
+	EEPROM.write(addr, val);
+	addr = addr + 1;
+	//±j®Óµ≤ßÙø˝√–
+	if (addr == 479)
+		recordEnd();
 }
-//ÈñãÂßãÈåÑË≠ú
+//∂}©lø˝√–
 void recordStart() {
-  Serial.println("");
-  Serial.println("Recording.....");
-  EEPROM.begin(512);
-  record = true;
-  playSong = false;
-  addr=val=0;
-  writeData(0);
+	Serial.println("");
+	Serial.println("Recording.....");
+	EEPROM.begin(512);
+	record = true;
+	playSong = false;
+	addr = val = 0;
+	writeData(0);
 }
-//ÁµêÊùüÈåÑË≠ú
+//µ≤ßÙø˝√–
 void recordEnd() {
-  record = false;
-  EEPROM.write(addr, 255);
-  EEPROM.commit();
-  addr = 0;
-  val = 0;
-  Serial.println("");
-  Serial.println("Recording Stop");
+	record = false;
+	EEPROM.write(addr, 255);
+	EEPROM.commit();
+	addr = 0;
+	val = 0;
+	Serial.println("");
+	Serial.println("Recording Stop");
+}
+//≈™®˙wifiAP±b±K
+void readssid(int sAddr, int len) {
+	EEPROM.begin(512);
+	for (int gg = 0; gg < len; gg++) {
+		val = EEPROM.read(sAddr);
+		sAddr++;
+		*(ssid + gg) = val;
+	}
+	for (int gg = 0; gg < len; gg++) {
+		val = EEPROM.read(sAddr);
+		sAddr++;
+		*(password + gg) = val;
+	}
+	Serial.println(ssid);
+	Serial.println(password);
+}
+//ºg§JwifiAP±b±K
+void writessid(int sAddr, int len) {
+	EEPROM.begin(512);
+	for (int gg = 0; gg < len; gg++)
+		EEPROM.write(sAddr + gg, *(ssid + gg));
+
+	sAddr += 16;
+	for (int gg = 0; gg < len; gg++)
+		EEPROM.write(sAddr + gg, *(password + gg));
+
+	EEPROM.commit();
+
 }
 
-void readssid(int sAddr, int len){
-    EEPROM.begin(512);
-    for (int gg=0; gg < len; gg++)
-    {
-        val = EEPROM.read(sAddr);
-        sAddr++;
-        *(ssid+gg) = val;
-    }
-    for (int gg=0; gg < len; gg++)
-    {
-        val = EEPROM.read(sAddr);
-        sAddr++;
-        *(password+gg) = val;
-    }
-    Serial.println(ssid);
-    Serial.println(password);         
-}
-
-void writessid(int sAddr, int len){
-    EEPROM.begin(512);
-    for (int gg=0; gg < len; gg++)
-        EEPROM.write( sAddr+gg, *(ssid+gg) );
-    
-    sAddr += 16;
-    for (int gg=0; gg < len; gg++)
-        EEPROM.write( sAddr+gg, *(password+gg) );
-    
-    EEPROM.commit(); 
-
-}
-
-//ËÆÄÂèñÊ®ÇË≠úË≥áÊñô
+//≈™®˙º÷√–∏ÍÆ∆
 void readMySong() {
-  playSong = true;
-  EEPROM.begin(512);
-  val = EEPROM.read(addr);
-  playMySong(val);
+	playSong = true;
+	EEPROM.begin(512);
+	val = EEPROM.read(addr);
+	playMySong(val);
 
-  addr = addr + 1;
+	addr = addr + 1;
 
-  if (addr == 511 or val == 255) {
-    playSong = false;
-    addr = val = 0;
-  }
+	if (addr == 511 or val == 255) {
+		playSong = false;
+		addr = val = 0;
+	}
 }
 
-//Êí•ÊîæÊ®ÇË≠úË≥áÊñô
+//º∑©Òº÷√–∏ÍÆ∆
 void playMySong(int value) {
-  if (value >= 255) { //ÁµêÊùüÊºîÂ•è
-    playSong = false;
-    addr = val = 0;
-  } else if (value >= 127) { //ÂΩàÂ•è
-    Serial.print(addr);
-    Serial.print("\t");
-    Serial.print(val, DEC);
-    Serial.print("\t");
-    Serial.print("play: ");
-    playNote(value);
-    Serial.println();
-  } else { //Á≠âÂæÖ
-    int waittime;
-    if (value >= 111) {
-      waittime = 7000 + (value - 111) * 100 ;
-    } else if (value >= 95) {
-      waittime = 6000 + (value - 95) * 100 ;
-    } else if (value >= 79) {
-      waittime = 5000 + (value - 79) * 100 ;
-    } else if (value >= 63) {
-      waittime = 4000 + (value - 63) * 100 ;
-    } else if (value >= 47) {
-      waittime = 3000 + (value - 47) * 100 ;
-    } else if (value >= 31) {
-      waittime = 2000 + (value - 31) * 100 ;
-    } else if (value >= 15) {
-      waittime = 1000 + (value - 15) * 100 ;
-    } else {
-      waittime = value * 100 ;
-    }
-    Serial.print(addr);
-    Serial.print("\t");
-    Serial.print(val, DEC);
-    Serial.print("\t");
-    Serial.print("waittime: ");
-    Serial.print(waittime);
-    Serial.println();
-    delay(waittime);
-  }
+	if (value >= 255) { //µ≤ßÙ∫t´µ
+		playSong = false;
+		addr = val = 0;
+	} else if (value >= 127) { //ºu´µ
+		Serial.print(addr);
+		Serial.print("\t");
+		Serial.print(val, DEC);
+		Serial.print("\t");
+		Serial.print("play: ");
+		playNote(value);
+		Serial.println();
+	} else { //µ•´›
+		int waittime;
+		if (value >= 111) {
+			waittime = 7000 + (value - 111) * 100;
+		} else if (value >= 95) {
+			waittime = 6000 + (value - 95) * 100;
+		} else if (value >= 79) {
+			waittime = 5000 + (value - 79) * 100;
+		} else if (value >= 63) {
+			waittime = 4000 + (value - 63) * 100;
+		} else if (value >= 47) {
+			waittime = 3000 + (value - 47) * 100;
+		} else if (value >= 31) {
+			waittime = 2000 + (value - 31) * 100;
+		} else if (value >= 15) {
+			waittime = 1000 + (value - 15) * 100;
+		} else {
+			waittime = value * 100;
+		}
+		Serial.print(addr);
+		Serial.print("\t");
+		Serial.print(val, DEC);
+		Serial.print("\t");
+		Serial.print("waittime: ");
+		Serial.print(waittime);
+		Serial.println();
+		delay(waittime);
+	}
 }
-
+//≠µ≤≈∫V¿ª
 void playNote(int value) {
-  int a = value - 127;
-  if(a>=0){
-    char pin;
-    switch (a) {
-      case 0:
-        pin=D0;
-        Serial.print("DO ");
-        break;
-      case 16:
-        pin=D1;
-        Serial.print("RE ");
-        break;
-      case 32:
-        pin=D2;
-        Serial.print("ME ");
-        break;
-      case 48:
-        pin=D3;
-        Serial.print("FA ");
-        break;
-      case 64:
-        pin=D4;
-        Serial.print("SO ");
-        break;
-      case 80:
-        pin=D5;
-        Serial.print("LA ");
-        break;
-      case 96:
-        pin=D6;
-        Serial.print("SI ");
-        break;
-      case 112:
-        pin=D8;
-        Serial.print("DO2 ");
-        break;
-    }
-    DigitalOut(pin);
-  }
+	int a = value - 127;
+	if (a >= 0) {
+		char pin;
+		switch (a) {
+		case 0:
+			pin = D0;
+			Serial.print("DO ");
+			break;
+		case 16:
+			pin = D1;
+			Serial.print("RE ");
+			break;
+		case 32:
+			pin = D2;
+			Serial.print("ME ");
+			break;
+		case 48:
+			pin = D3;
+			Serial.print("FA ");
+			break;
+		case 64:
+			pin = D4;
+			Serial.print("SO ");
+			break;
+		case 80:
+			pin = D5;
+			Serial.print("LA ");
+			break;
+		case 96:
+			pin = D6;
+			Serial.print("SI ");
+			break;
+		case 112:
+			pin = D8;
+			Serial.print("DO2 ");
+			break;
+		}
+		DigitalOut(pin);
+	}
 }
 
 void DigitalOut(char notePin) {
-  digitalWrite(notePin, HIGH);
-  delay(20);
-  digitalWrite(notePin, LOW);
+	digitalWrite(notePin, HIGH);
+	delay(20);
+	digitalWrite(notePin, LOW);
 }
-
