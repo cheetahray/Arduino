@@ -5,7 +5,7 @@
 #include <ESP8266WebServer.h>
 
 //設定機器編號 1~100
-const char* num = "200";
+const char* num = "1";
 //設定類別
 char type[] = "bell";
 
@@ -38,8 +38,17 @@ void setup() {
 	btn1State = digitalRead(D7);
 	WiFi.disconnect();
 	WiFi.softAPdisconnect();
-	//AP MODE
+  
+  if (btn1State == HIGH) {
+    //WIFI MODE
 	WiFi.mode(WIFI_AP_STA);
+    //ssid = "bellclass\0\0\0\0\0\0\0";
+    //password = "noisekitchen\0\0\0\0";
+    readssid(480, 16);
+    wifiConnected = connectWifi();
+  } else {
+    //AP MODE
+    WiFi.mode(WIFI_AP);
 	strcat(ssid_AP, num);
 	strcat(password_AP, num);
 	WiFi.softAP(ssid_AP, password_AP);
@@ -51,15 +60,6 @@ void setup() {
 	Serial.print("password: ");
 	Serial.println(password_AP);
 	Serial.println("HTTP server started");
-	if (btn1State == HIGH) {
-		//WIFI MODE
-		//ssid = "bellclass\0\0\0\0\0\0\0";
-		//password = "noisekitchen\0\0\0\0";
-		readssid(480, 16);
-		wifiConnected = connectWifi();
-	} else {
-		//AP MODE
-		WiFi.mode(WIFI_AP);
 		wifiConnected = true;
 	}
 
