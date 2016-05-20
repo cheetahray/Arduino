@@ -22,10 +22,7 @@
 #define    DMX1024    (1)    // (500 kbaud - 2 to 1024 channels) Completely non standard - TESTED ok
 #define    DMX2048    (2)    // (1000 kbaud - 2 to 2048 channels) called by manufacturers DMX1000K, DMX 4x or DMX 1M ???
 
-int inState = 0;
-int pinState = 0;
-
-const long interval = 5000;   
+int lastret;
 
 void setup() 
 {
@@ -81,16 +78,15 @@ int mode(int _1st, int _2nd, int _3rd, int _4th)
     return 14;
   if(_1st != 0 && _2nd != 0 && _3rd != 0 && _4th != 0)
     return 15;
-    
+
 }
 
 void loop()
 {
-  
-  for (int ii=0; ii<4; ii+=4)
-  {
-    int ret = mode(ArduinoDmx0.RxBuffer[0], ArduinoDmx0.RxBuffer[1], ArduinoDmx0.RxBuffer[2], ArduinoDmx0.RxBuffer[3]);
-    delay(interval-500);
+  int ret = mode(ArduinoDmx0.RxBuffer[0], ArduinoDmx0.RxBuffer[1], ArduinoDmx0.RxBuffer[2], ArduinoDmx0.RxBuffer[3]);
+  if (lastret != ret)
+  {  
+    lastret = ret;
     digitalWrite(8,  ret>>3 );
     ret = ( (ret >= 8) ? (ret - 8) : ret );
     digitalWrite(9,  ret>>2 );
@@ -98,13 +94,17 @@ void loop()
     digitalWrite(10, ret>>1 );
     ret = ( (ret >= 2) ? (ret - 2) : ret );
     digitalWrite(11, ret);  
-    delay(500);
+    delay(200);
     digitalWrite(8,0);
     digitalWrite(9,0);
     digitalWrite(10,0);
     digitalWrite(11,0);  
+    delay(200);    
   }
-
+  else
+    delay(100);
 }  //end loop()
+
+
 
 
