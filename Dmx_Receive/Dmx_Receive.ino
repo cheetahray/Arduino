@@ -26,10 +26,10 @@ int lastret;
 
 void setup()
 {
-  //?€?€?¿å?ä½¿ç”¨ 2 pin ??RS485?€?§åˆ¶
+  //?ï¿½?ï¿½?ï¿½ï¿½?ä½¿ç”¨ 2 pin ??RS485?ï¿½?ï¿½åˆ¶
   ArduinoDmx0.set_control_pin(2);    // Arduino output pin for MAX485 input/output control (connect to MAX485 pins 2-3) 
   ArduinoDmx0.set_rx_address(1);      // set rx0 dmx start address
-  ArduinoDmx0.set_rx_channels(64);     // number of rx channels//?€?€ä½¿ç”¨å¤šå??»é?
+  ArduinoDmx0.set_rx_channels(64);     // number of rx channels//?ï¿½?ï¿½ä½¿ç”¨å¤šï¿½??ï¿½ï¿½?
   ArduinoDmx0.init_rx(DMX512);        // starts universe 0 as rx, NEW Parameter DMX mode
 
   pinMode(8, OUTPUT);
@@ -84,9 +84,25 @@ int mode(int _1st, int _2nd, int _3rd, int _4th)
 void loop()
 {
   int ret = mode(ArduinoDmx0.RxBuffer[0], ArduinoDmx0.RxBuffer[1], ArduinoDmx0.RxBuffer[2], ArduinoDmx0.RxBuffer[3]);
-    if (lastret != ret)
+  if (lastret != ret)
+  {
+    lastret = ret;
+    digitalWrite(8,  ret >> 3 );
+    ret = ( (ret >= 8) ? (ret - 8) : ret );
+    digitalWrite(9,  ret >> 2 );
+    ret = ( (ret >= 4) ? (ret - 4) : ret );
+    digitalWrite(10, ret >> 1 );
+    ret = ( (ret >= 2) ? (ret - 2) : ret );
+    digitalWrite(11, ret);
+    if (true) //(15 == lastret)
     {
-      lastret = ret;
+      delay(500);
+      digitalWrite(8, 0);
+      digitalWrite(9, 0);
+      digitalWrite(10, 0);
+      digitalWrite(11, 0);
+      delay(1000);
+      ret = lastret;
       digitalWrite(8,  ret >> 3 );
       ret = ( (ret >= 8) ? (ret - 8) : ret );
       digitalWrite(9,  ret >> 2 );
@@ -94,16 +110,20 @@ void loop()
       digitalWrite(10, ret >> 1 );
       ret = ( (ret >= 2) ? (ret - 2) : ret );
       digitalWrite(11, ret);
-      delay(200);
-      digitalWrite(8, 0);
-      digitalWrite(9, 0);
-      digitalWrite(10, 0);
-      digitalWrite(11, 0);
-      delay(200);
+      delay(500);
     }
+    else
+      delay(500);
+    digitalWrite(8, 0);
+    digitalWrite(9, 0);
+    digitalWrite(10, 0);
+    digitalWrite(11, 0);
+    delay(1000);
+  }
   else
     delay(100);
 }  //end loop()
+
 
 
 
