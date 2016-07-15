@@ -75,7 +75,7 @@ void setup() {
 void loop() {
 	if (wifiConnected) {
 		recieveData(); //¦¬udp¸ê®Æ
-		if (!playSong) {
+		if (false) { //(!playSong) {
 			btn2State = digitalRead(RX);
 			if (btn2State == HIGH) {
 				//Serial.println(btn2State);
@@ -85,7 +85,7 @@ void loop() {
 				//Serial.print(btn2State);
 				//Serial.print(" ");
 			}
-		} else if (playSong)
+		} else if (false)
 			readMySong();
 		//delay(10);
 	}
