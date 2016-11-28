@@ -5,7 +5,7 @@
 //#include <ESP8266WebServer.h>
 
 //設定機器編號 241~248
-const char* num = "241";
+const char* num = "243";
 //設定類別
 char type[] = "drum";
 
@@ -34,14 +34,14 @@ bool soopen;
 bool laopen;
 bool tiopen;
 bool DOopen;
-unsigned long dotime;
-unsigned long retime;
-unsigned long mitime;
-unsigned long fatime;
-unsigned long sotime;
-unsigned long latime;
-unsigned long titime;
-unsigned long DOtime;
+long dotime;
+long retime;
+long mitime;
+long fatime;
+long sotime;
+long latime;
+long titime;
+long DOtime;
 int doduration;
 int reduration;
 int miduration;
@@ -208,54 +208,54 @@ void recieveData() {
       if(doopen == true && millis() - dotime > doduration)
       {
           doopen = false;
-          Serial.print(bass);
-          Serial.println("Down");
+          //Serial.print(bass);
+          //Serial.println("Down");
           digitalWrite(D0, LOW);
       }
       if(reopen == true && millis() - retime > reduration)
       {
           reopen = false;
-          Serial.print(snare);
-          Serial.println("1 Down");
+          //Serial.print(snare);
+          //Serial.println("1 Down");
           digitalWrite(D1, LOW);
       }      
       if(miopen == true && millis() - mitime > miduration)
       {
           miopen = false;
-          Serial.print(snareside);
-          Serial.println("Down");
+          //Serial.print(snareside);
+          //Serial.println("Down");
           digitalWrite(D2, LOW);
       }
       if(faopen == true && millis() - fatime > faduration)
       {
           faopen = false;
-          Serial.println("Down");
+          //Serial.println("Down");
           digitalWrite(D3, LOW);
       }
       if(soopen == true && millis() - sotime > soduration)
       {
           soopen = false;
-          Serial.print(snare);
-          Serial.println("2 Down");
+          //Serial.print(snare);
+          //Serial.println("2 Down");
           digitalWrite(D4, LOW);
       }
       if(laopen == true && millis() - latime > laduration)
       {
           laopen = false;
-          Serial.print(midtom);
-          Serial.println("Down");
+          //Serial.print(midtom);
+          //Serial.println("Down");
           digitalWrite(D5, LOW);
       }
       if(tiopen == true && millis() - titime > tiduration)
       {
           tiopen = false;
-          Serial.println("Down");
+          //Serial.println("Down");
           digitalWrite(D6, LOW);
       }
       if(DOopen == true && millis() - DOtime > DOduration)
       {
           DOopen = false;
-          Serial.println("Down");
+          //Serial.println("Down");
           digitalWrite(D8, LOW);
       }
     }
@@ -269,7 +269,7 @@ void playNote(int value, int velocity) {
   switch (value) {
     case 127:
       pin = D0;
-      Serial.print(bass);
+      //Serial.print(bass);
       dotime = millis();
       doduration = velocity;
       doopen = true;
@@ -279,8 +279,8 @@ void playNote(int value, int velocity) {
       if(reopen == false)
       {
         pin = D1;
-        Serial.print(snare);
-        Serial.print("1 ");
+        //Serial.print(snare);
+        //Serial.print("1 ");
         retime = millis();
         reduration = velocity;
         reopen = true;
@@ -300,7 +300,7 @@ void playNote(int value, int velocity) {
       break;
     case 159:
       pin = D2;
-      Serial.print(snareside);
+      //Serial.print(snareside);
       mitime = millis();
       miduration = velocity;
       miopen = true;
@@ -308,7 +308,7 @@ void playNote(int value, int velocity) {
       break;
     case 175:
       pin = D3;
-      Serial.print("FA ");
+      //Serial.print("FA ");
       fatime = millis();
       faduration = velocity;
       faopen = true;
@@ -316,7 +316,7 @@ void playNote(int value, int velocity) {
       break;
     case 191:
       pin = D4;
-      Serial.print("SO ");
+      //Serial.print("SO ");
       sotime = millis();
       soduration = velocity;
       soopen = true;
@@ -324,7 +324,7 @@ void playNote(int value, int velocity) {
       break;
     case 207:
       pin = D5;
-      Serial.print(midtom);
+      //Serial.print(midtom);
       latime = millis();
       laduration = velocity;
       laopen = true;
@@ -332,7 +332,7 @@ void playNote(int value, int velocity) {
       break;
     case 223:
       pin = D6;
-      Serial.print("SI ");
+      //Serial.print("SI ");
       titime = millis();
       tiduration = velocity;
       tiopen = true;
@@ -340,7 +340,7 @@ void playNote(int value, int velocity) {
       break;
     case 239:
       pin = D8;
-      Serial.print("DO2 ");
+      //Serial.print("DO2 ");
       DOtime = millis();
       DOduration = velocity;
       DOopen = true;
@@ -349,7 +349,7 @@ void playNote(int value, int velocity) {
   }
   if(true == upup)
   {
-      Serial.println("UP");
+      //Serial.println("UP");
       digitalWrite(pin, HIGH);
   }
 }
